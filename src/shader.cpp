@@ -5,6 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 
+
 void checkLinkError(GLuint id, const std::string& paths)
 {
 	GLint success = 0;

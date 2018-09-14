@@ -1,6 +1,7 @@
 #include "timer.hpp"
 #include <vector>
 
+
 Timer::Timer()
 {
 	start = std::chrono::high_resolution_clock::now();

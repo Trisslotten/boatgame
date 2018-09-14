@@ -19,3 +19,4 @@ namespace Input
 	bool gamepadButtonPressed(int button);
 };
 
+

@@ -140,3 +140,4 @@ bool Input::gamepadButtonPressed(int button)
 	}
 	return 0;
 }
+

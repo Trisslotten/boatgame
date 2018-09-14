@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 
 
+
 class ShaderProgram
 {
 	std::unordered_map<GLenum, std::string> paths;
