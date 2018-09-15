@@ -16,30 +16,36 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="input.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="shader.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
     <ClCompile Include="timer.cpp">
       <Filter>Source Files\utilities</Filter>
     </ClCompile>
+    <ClCompile Include="engine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="input.cpp">
+      <Filter>Source Files\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="window.cpp">
+      <Filter>Source Files\utilities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="window.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="input.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="shader.hpp">
       <Filter>Source Files\graphics</Filter>
     </ClInclude>
     <ClInclude Include="timer.hpp">
+      <Filter>Source Files\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="engine.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="input.hpp">
+      <Filter>Source Files\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="window.hpp">
       <Filter>Source Files\utilities</Filter>
     </ClInclude>
   </ItemGroup>

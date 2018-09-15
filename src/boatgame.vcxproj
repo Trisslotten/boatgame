@@ -123,6 +123,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="engine.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="shader.cpp" />
@@ -130,6 +131,7 @@
     <ClCompile Include="window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="engine.hpp" />
     <ClInclude Include="input.hpp" />
     <ClInclude Include="shader.hpp" />
     <ClInclude Include="timer.hpp" />

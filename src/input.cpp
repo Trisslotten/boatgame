@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include "window.hpp"
 #include <GLFW\glfw3.h>
+#include <iostream>
 
 namespace
 {
@@ -79,6 +80,11 @@ bool Input::isKeyPressed(int key)
 	{
 		return false;
 	}
+}
+
+bool Input::isKeyPressedRepeat(int key)
+{
+	return false;
 }
 
 void Input::reset()

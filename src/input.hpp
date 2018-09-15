@@ -8,6 +8,8 @@ namespace Input
 	// key is GLFW keycode
 	bool isKeyDown(int key);
 	bool isKeyPressed(int key);
+	// TODO implement if needed
+	//bool isKeyPressedRepeat(int key);
 	bool isMouseButtonDown(int button);
 	bool isButtonPressed(int button);
 	void reset();
