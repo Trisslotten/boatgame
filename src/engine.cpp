@@ -33,19 +33,16 @@ void Engine::update()
 
 void TestState::init()
 {
-	std::cout << "DEBUG: TestState init\n";
-	float r = rand() / float(RAND_MAX);
-	float g = rand() / float(RAND_MAX);
-	float b = rand() / float(RAND_MAX);
-	glClearColor(r, g, b, 1.f);
+	renderer.init();
 }
 
 void TestState::update(double dt)
 {
-
+	camera.update(dt);
+	renderer.setCamera(camera);
 }
 
 void TestState::render()
 {
-
+	renderer.render();
 }

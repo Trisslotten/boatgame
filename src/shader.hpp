@@ -9,6 +9,8 @@
 
 class ShaderProgram
 {
+	const std::string SHADERS_PATH = "shaders/";
+
 	std::unordered_map<GLenum, std::string> paths;
 	std::unordered_map<GLenum, GLuint> ids;
 

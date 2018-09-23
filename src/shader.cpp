@@ -86,7 +86,7 @@ ShaderProgram::~ShaderProgram()
 void ShaderProgram::add(GLenum type, const std::string& path)
 {
 	glDeleteShader(ids[type]);
-	paths[type] = path;
+	paths[type] = SHADERS_PATH + path;
 	ids[type] = 0;
 }
 

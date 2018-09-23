@@ -11,6 +11,9 @@
     <Filter Include="Source Files\utilities">
       <UniqueIdentifier>{7c70ccbd-3ee8-4728-a8fa-b468cc371604}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\graphics\shaders">
+      <UniqueIdentifier>{b867966a-66f3-433d-9070-ccbdd516a6c1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -31,6 +34,12 @@
     <ClCompile Include="window.cpp">
       <Filter>Source Files\utilities</Filter>
     </ClCompile>
+    <ClCompile Include="camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="shader.hpp">
@@ -48,5 +57,31 @@
     <ClInclude Include="window.hpp">
       <Filter>Source Files\utilities</Filter>
     </ClInclude>
+    <ClInclude Include="renderer.hpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="mesh.hpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="vertex.hpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="camera.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\water.frag">
+      <Filter>Source Files\graphics\shaders</Filter>
+    </None>
+    <None Include="shaders\water.tesc">
+      <Filter>Source Files\graphics\shaders</Filter>
+    </None>
+    <None Include="shaders\water.tese">
+      <Filter>Source Files\graphics\shaders</Filter>
+    </None>
+    <None Include="shaders\water.vert">
+      <Filter>Source Files\graphics\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

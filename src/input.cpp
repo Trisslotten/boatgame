@@ -82,11 +82,6 @@ bool Input::isKeyPressed(int key)
 	}
 }
 
-bool Input::isKeyPressedRepeat(int key)
-{
-	return false;
-}
-
 void Input::reset()
 {
 	keys = pre_keys;

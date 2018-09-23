@@ -1,6 +1,8 @@
 #pragma once
 #include <iostream>
 #include "timer.hpp"
+#include "camera.hpp"
+#include "renderer.hpp"
 
 class EngineState;
 
@@ -39,6 +41,8 @@ public:
 
 class TestState : public EngineState
 {
+	Camera camera;
+	Renderer renderer;
 public:
 	void init() override;
 	void update(double dt) override;
