@@ -191,6 +191,11 @@ bool Window::shouldClose()
 	return glfwWindowShouldClose(window);
 }
 
+bool Window::inFocus()
+{
+	return glfwGetWindowAttrib(window, GLFW_FOCUSED);
+}
+
 bool Window::mouseButtonDown(int button)
 {
 	return glfwGetMouseButton(window, button) == GLFW_PRESS;

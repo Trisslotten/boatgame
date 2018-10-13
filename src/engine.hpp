@@ -3,23 +3,12 @@
 #include "timer.hpp"
 #include "camera.hpp"
 #include "renderer.hpp"
-
-class EngineState;
-
-class Engine
-{
-	EngineState* state = nullptr;
-	Timer frame_time;
-public:
-	Engine();
-	void update();
-};
+#include "water.hpp"
 
 class EngineState
 {
-	friend class Engine;
-	EngineState* next_state = nullptr;
 public:
+	EngineState* next_state = nullptr;
 	virtual void init() = 0;
 	virtual void update(double dt) = 0;
 	virtual void render() = 0;
@@ -41,6 +30,12 @@ public:
 
 class TestState : public EngineState
 {
+	std::vector<glm::vec3> ps;
+
+	Timer globalTimer;
+	float elapsed;
+
+	Water water;
 	Camera camera;
 	Renderer renderer;
 public:

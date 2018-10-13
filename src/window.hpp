@@ -17,7 +17,7 @@ namespace Window
 	void update();
 
 	bool shouldClose();
-
+	bool inFocus();
 	bool mouseButtonDown(int button);
 	bool keyDown(int key);
 

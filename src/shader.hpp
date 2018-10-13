@@ -26,6 +26,7 @@ public:
 	void add(GLenum type, const std::string& path);
 	void compile();
 
+	void reload();
 
 	void use();
 

@@ -2,7 +2,8 @@
 
 layout(vertices = 1) out;
 in vec2 vPatchPos[];
-out vec2 tcPatchPos[];
+
+patch out vec2 tcPatchPos;
 
 
 uniform float numPatches;
@@ -12,15 +13,14 @@ uniform vec3 size;
 uniform mat4 viewProj;
 uniform vec3 cameraPos;
 uniform vec2 windowSize;
+uniform float fov = 70.0;
 
-const float fov = 70.0;
-
-const float pixelsPerQuad = 20.0;
+const float pixelsPerQuad = 7.0;
 
 float level(vec2 offset) 
 {
 	float patchSize = size.x/numPatches;
-	vec2 pos = vPatchPos[0] + 0.5*patchSize + patchSize * offset;
+	vec2 pos = vPatchPos[gl_InvocationID] + 0.5*patchSize + patchSize * offset;
 	//pos += size.xz * hmPos;
 	float dist = length(vec3(pos.x, 0, pos.y) - cameraPos);
 	float b = dist*tan(fov/2.0);
@@ -32,8 +32,7 @@ float level(vec2 offset)
 }
 
 void main() 
-{
-		
+{		
 	float currLevel = level(vec2(0));
 
 	gl_TessLevelOuter[0] = currLevel;
@@ -61,5 +60,5 @@ void main()
 	gl_TessLevelInner[0] = currLevel;
 	gl_TessLevelInner[1] = currLevel;
 
-	tcPatchPos[gl_InvocationID] = vPatchPos[gl_InvocationID];
+	tcPatchPos = vPatchPos[gl_InvocationID];
 }

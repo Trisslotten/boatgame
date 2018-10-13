@@ -116,6 +116,23 @@ void ShaderProgram::compile()
 
 }
 
+
+void ShaderProgram::reload()
+{
+	for(auto elem : ids)
+		glDeleteShader(elem.second);
+
+	glDeleteProgram(id);
+
+	std::cout << "[DEBUG] Reloading Shaders:\n";
+	for (auto elem : paths)
+	{
+		std::cout << "  " << elem.second << "\n";
+	}
+
+	compile();
+}
+
 void ShaderProgram::use()
 {
 	glUseProgram(id);
