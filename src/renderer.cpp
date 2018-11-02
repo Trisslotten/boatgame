@@ -4,6 +4,7 @@
 #include "input.hpp"
 #include "window.hpp"
 #include "lodepng.h"
+#include <glm/gtx/rotate_vector.hpp>
 
 namespace
 {
@@ -149,19 +150,51 @@ void Renderer::init()
 	skyCoeffsy[4] = -0.0109f * turbidity + 0.0529f;
 }
 
-void Renderer::calcZenitalAbsolutes()
+
+float Renderer::skyGamma(float z, float a)
+{
+	return acos(sin(zenith)*sin(z)*cos(a - azimuth) + cos(zenith)*cos(z));
+}
+float perez(float z, float g, float coeffs[5])
+{
+	return	(1.0 + coeffs[0]*exp(coeffs[1] / cos(z)))*
+		(1.0 + coeffs[2]*exp(coeffs[3]*g) + coeffs[4]*pow(cos(g), 2.0));
+}
+glm::vec3 rgb(float Y, float x, float y)
+{
+	float X = x / y * Y;
+	float Z = (1. - x - y) / y * Y;
+	glm::vec3 result;
+	result.r = 3.2406f * X - 1.5372f * Y - 0.4986f * Z;
+	result.g = -0.9689f * X + 1.8758f * Y + 0.0415f * Z;
+	result.b = 0.0557f * X - 0.2040f * Y + 1.0570f * Z;
+	return result;
+}
+
+void Renderer::calcSkyValues()
 {
 	// https://nicoschertler.wordpress.com/2013/04/03/simulating-a-days-sky/
-	double pi = glm::pi<double>();
-	zenith = pi / 8;
-	azimuth = 0;
+	float pi = glm::pi<float>();
+	// 1 => straight up, 0 => on horizon
+	float sunpos = 0.65;
+	zenith = 0.5 * pi * (1.0-sunpos);
+	azimuth = pi/8;
 
-	double Yz = (4.0453 * turbidity - 4.9710) * glm::tan((4.0 / 9 - turbidity / 120.0) * (pi - 2 * zenith)) - 0.2155 * turbidity + 2.4192;
-	double Y0 = (4.0453 * turbidity - 4.9710) * glm::tan((4.0 / 9 - turbidity / 120.0) * (pi)) - 0.2155 * turbidity + 2.4192; ;
-	this->Yz = (float)(Yz / Y0);
-	double z3 = (float)glm::pow(zenith, 3);
-	double z2 = zenith * zenith;
-	double z = zenith;
+	glm::vec4 sun{ 0, 1, 0, 0 };
+	sun = glm::rotateX(sun, zenith);
+	sun = glm::rotateY(sun, azimuth);
+	sunDir = glm::vec3(sun);
+
+	float Yz = (4.0453f * turbidity - 4.9710f) 
+		* glm::tan((4.0f / 9.f - turbidity / 120.0f) * (pi - 2.f * zenith)) 
+		- 0.2155f * turbidity + 2.4192f;
+	float  Y0 = (4.0453f * turbidity - 4.9710f) 
+		* glm::tan((4.0f / 9.f - turbidity / 120.0f) * (pi)) 
+		- 0.2155f * turbidity + 2.4192f; ;
+	this->Yz = (Yz / Y0);
+	float  z3 = glm::pow(zenith, 3.f);
+	float  z2 = zenith * zenith;
+	float  z = zenith;
 	glm::vec3 T_vec{ turbidity * turbidity, turbidity, 1 };
 	glm::vec3 x
 	{
@@ -178,16 +211,27 @@ void Renderer::calcZenitalAbsolutes()
 	};
 	this->yz = glm::dot(T_vec, y);
 
+
+	float g = skyGamma(zenith, azimuth);
+	float Yp = Yz * perez(z, g, skyCoeffsY) / perez(0, zenith, skyCoeffsY);
+	float xp = xz * perez(z, g, skyCoeffsx) / perez(0, zenith, skyCoeffsx);
+	float yp = yz * perez(z, g, skyCoeffsy) / perez(0, zenith, skyCoeffsy);
+	sunColor = rgb(Yp, xp, yp);
+	sunColor = glm::clamp(sunColor, 0.0f, 1.0f);
 }
 
 void Renderer::render()
 {
 	if (Input::isKeyDown(GLFW_KEY_F5))
+	{
 		waterShader.reload();
+		skyboxShader.reload();
+		pointShader.reload();
+	}
 
-	calcZenitalAbsolutes();
+	calcSkyValues();
 
-	glClearColor(skyColor.r, skyColor.g, skyColor.b, 1.f);
+	glClearColor(0.f, 0.f, 0.f, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glm::mat4 camTransform = camera.getTransform();
@@ -212,13 +256,15 @@ void Renderer::render()
 		waterShader.uniform(std::string("skyCoeffsx.") + chr, skyCoeffsx[i]);
 		waterShader.uniform(std::string("skyCoeffsy.") + chr, skyCoeffsy[i]);
 	}
-	waterShader.uniform("turbidity", float(turbidity));
-	waterShader.uniform("zenith", float(zenith));
-	waterShader.uniform("azimuth", float(azimuth));
-	waterShader.uniform("Yz", float(Yz));
-	waterShader.uniform("xz", float(xz));
-	waterShader.uniform("yz", float(yz));
-
+	waterShader.uniform("turbidity", turbidity);
+	waterShader.uniform("zenith", zenith);
+	waterShader.uniform("azimuth", azimuth);
+	waterShader.uniform("Yz", Yz);
+	waterShader.uniform("xz", xz);
+	waterShader.uniform("yz", yz);
+	waterShader.uniform("sunDir", sunDir);
+	waterShader.uniform("sunColor", sunColor);
+	waterShader.uniform("cameraDir", camera.getLookDir());
 	glBindVertexArray(waterPatchVAO);
 	glPatchParameteri(GL_PATCH_VERTICES, 1);
 	glDrawArrays(GL_PATCHES, 0, MAX_PATCHES * MAX_PATCHES);
@@ -249,14 +295,16 @@ void Renderer::render()
 		skyboxShader.uniform(std::string("skyCoeffsx.") + chr, skyCoeffsx[i]);
 		skyboxShader.uniform(std::string("skyCoeffsy.") + chr, skyCoeffsy[i]);
 	}
-	skyboxShader.uniform("turbidity", float(turbidity));
-	skyboxShader.uniform("zenith", float(zenith));
-	skyboxShader.uniform("azimuth", float(azimuth));
-	skyboxShader.uniform("Yz", float(Yz));
-	skyboxShader.uniform("xz", float(xz));
-	skyboxShader.uniform("yz", float(yz));
+	skyboxShader.uniform("turbidity", turbidity);
+	skyboxShader.uniform("zenith", zenith);
+	skyboxShader.uniform("azimuth", azimuth);
+	skyboxShader.uniform("Yz", Yz);
+	skyboxShader.uniform("xz", xz);
+	skyboxShader.uniform("yz", yz);
 	skyboxShader.uniform("time", globalTime);
 	skyboxShader.uniform("resolution", Window::size());
+	skyboxShader.uniform("sunDir", sunDir);
+	skyboxShader.uniform("sunColor", sunColor);
 	glBindVertexArray(skyboxVAO);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glDepthFunc(GL_LESS);

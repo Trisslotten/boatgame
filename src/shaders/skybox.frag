@@ -18,6 +18,8 @@ uniform float yz;
 uniform SkyCoeffs skyCoeffsY;
 uniform SkyCoeffs skyCoeffsx;
 uniform SkyCoeffs skyCoeffsy;
+uniform vec3 sunDir;
+uniform vec3 sunColor;
 
 uniform float time;
 uniform vec2 resolution;
@@ -73,27 +75,25 @@ void main()
 	float z = acos(dir.y);
 
 	float g = gamma(z,a);
-	//z = min(z, 3.1415926/2.0);
+	z = min(z, 3.1415926/2.0);
 
 	float Yp = Yz * perez(z, g, skyCoeffsY) / perez(0, zenith, skyCoeffsY);
 	float xp = xz * perez(z, g, skyCoeffsx) / perez(0, zenith, skyCoeffsx);
 	float yp = yz * perez(z, g, skyCoeffsy) / perez(0, zenith, skyCoeffsy);
 
-	vec3 sun = vec3(0,1,0);
-	sun.yz = rotate(sun.yz, -zenith);
-	sun.xz = rotate(sun.xz, azimuth);
-	sun = normalize(sun);
 
-	float dist = length(sun - dir);
+
+	float dist = length(sunDir - dir);
 
 	outColor = vec4(rgb(Yp, xp, yp), 1);
 
-	
+	//outColor.rgb *= 0.7;
 
-	outColor.rgb = mix(outColor.rgb, vec3(1, 1, 1), smoothstep(0.15, 0.03, dist));
+	// sun
+	outColor.rgb = mix(outColor.rgb, sunColor, smoothstep(0.2, 0.03, dist));
 
-	if(dot(dir, vec3(1,0,0)) > 0) 
-	{
-		outColor.rgb = dither(outColor.rgb);
-	}
+
+	outColor.rgb = dither(outColor.rgb);
+
+	//outColor.rgb = fract(outColor.rgb);
 }

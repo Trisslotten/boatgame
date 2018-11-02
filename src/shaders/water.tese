@@ -1,6 +1,6 @@
 #version 440 core
 
-layout(quads, equal_spacing, cw) in;
+layout(quads, fractional_even_spacing, cw) in;
 
 patch in vec2 tcPatchPos;
 
@@ -8,6 +8,7 @@ patch in vec2 tcPatchPos;
 out vec3 tePosition;
 out vec3 teCameraPos;
 out vec3 teSunDir;
+out vec3 teUp;
 
 // world space
 out vec3 teNonDisplaceWorld;
@@ -43,8 +44,8 @@ vec3 gerstner(vec2 pos, float S, float A, float L, float Q, vec2 wd, float i)
 	result.xz += Qi*A*wd*cos(par);
 	result.y += A*sin(par);
 
-	float par2 = 0.3*w*dot(mat2(0,1,-1,0)*wd, pos) + 10*hash11(i+100);
-	result *= pow((sin(par2)+1)/2, 3);
+	float par2 = 0.3*w*dot(mat2(0,1,-1,0)*wd, pos) + 10*hash11(i+100) + 2.0*sin(par*0.1);
+	result *= pow((sin(par2)+1.1)*0.5, 0.9);
 	//result *= (sin(0.1*w*dot(wd, pos))+1)/2;
 	return result;
 }
@@ -55,44 +56,55 @@ vec3 displace(vec3 pos)
 	vec3 result;
 	result.xz = pos.xz;
 	result.y = 0;
+
 	// wave spread 
-	float ws = 1.0;
+	float ws = 4.0;
+	const int stride = 50;
 	
-	for(int i = 0; i < 3; i++)
-	{
-		float amp = 1.5;
-		vec2 waveDir = rotate(windDir, ws*(hash11(i)-0.5));
-		float a = 1/pow(2,i);
-		result += gerstner(pos.xz, 1000*a, amp*a, 5000*a, 0.1, waveDir, i);
 
-		
-		waveDir = rotate(windDir, ws*(hash11(i+10)-0.5));
-		result += gerstner(pos.xz, 900*a, amp*a, 4500*a, 0.1, waveDir, i+10);
+	int i = 0;
+	vec2 waveDir;
 
-		waveDir = rotate(windDir, ws*(hash11(i+20)-0.5));
-		result += gerstner(pos.xz, 800*a, amp*a, 4000*a, 0.1, waveDir, i+20);
+	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
+	result += gerstner(pos.xz, 5, 0.02, 7, 0.333, waveDir, i);	
+	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
+	result += gerstner(pos.xz, 4, 0.02, 5, 0.33, waveDir, i);
 
-		waveDir = rotate(windDir, ws*(hash11(i+30)-0.5));
-		result += gerstner(pos.xz, 700*a, amp*a, 3500*a, 0.1, waveDir, i+30);
-		
-	}
+
+	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
+	result += gerstner(pos.xz, 10, 0.04, 20, 0.2, waveDir, i);
+	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
+	result += gerstner(pos.xz, 9, 0.04, 25, 0.2, waveDir, i);
+
+
+	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
+	result += gerstner(pos.xz, 15, 0.07, 50, 0.1, waveDir, i);
+	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
+	result += gerstner(pos.xz, 14, 0.07, 60, 0.1, waveDir, i);
+
+
+	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
+	result += gerstner(pos.xz, 43, 0.12, 100, 0.1, waveDir, i);
+	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
+	result += gerstner(pos.xz, 40, 0.12, 80, 0.1, waveDir, i);
 	
-	for(int i = 0; i < 5; i++)
-	{
-		vec2 waveDir = rotate(windDir, ws*(hash11(i)-0.5));
-		float a = 1/pow(1.3,i);
-		result += gerstner(pos.xz, 20*a, 0.05*a, 20*a, 0.2, waveDir, i);
 
-		waveDir = rotate(windDir, ws*(hash11(i+10)-0.5));
-		result += gerstner(pos.xz, 18*a, 0.05*a, 18*a,0.2, waveDir, i+10);
+	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
+	result += gerstner(pos.xz, 63, 0.15, 200, 0.1, waveDir, i);
+	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
+	result += gerstner(pos.xz, 60, 0.15, 180, 0.1, waveDir, i);
 
-		waveDir = rotate(windDir, ws*(hash11(i+20)-0.5));
-		result += gerstner(pos.xz, 16*a, 0.05*a, 16*a, 0.2, waveDir, i+20);
 
-		waveDir = rotate(windDir, ws*(hash11(i+30)-0.5));
-		result += gerstner(pos.xz, 14*a, 0.05*a, 14*a, 0.2, waveDir, i+30);
+	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
+	result += gerstner(pos.xz, 103, 0.25, 1000, 0.1, waveDir, i);
+	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
+	result += gerstner(pos.xz, 90, 0.25, 850, 0.1, waveDir, i);
 
-	}
+
+	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
+	result += gerstner(pos.xz, 103, 0.25, 1000, 0.1, waveDir, i);
+	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
+	result += gerstner(pos.xz, 90, 0.25, 850, 0.1, waveDir, i);
 	return result;
 }
 
@@ -128,8 +140,9 @@ void main()
 
 	teTBN = TBN;
 
+	teUp = invTBN * vec3(0,1,0);
 	teCameraPos = invTBN * cameraPos;
-	//teSunDir = invTBN * sunDir;
+	teSunDir = invTBN * sunDir;
 	tePosition = invTBN * pos;
 
 	dist = length(cameraPos.xz-pos.xz);

@@ -7,15 +7,12 @@
 
 class Renderer
 {
-	const int MAX_PATCHES = 128;
+	const int MAX_PATCHES = 2*128;
 
 	GLuint waterPatchVAO;
 	GLuint waterPatchVBO;
 	ShaderProgram waterShader;
 	glm::vec3 waterSize{5000,20,5000};
-
-	glm::vec3 skyColor{ 0.69, 0.84, 1 };
-	glm::vec3 sunDir{1,0.5,0};
 
 	ShaderProgram pointShader;
 	std::vector<glm::vec3> points;
@@ -25,18 +22,20 @@ class Renderer
 
 	GLuint skyboxVAO;
 	GLuint skyboxVBO;
-	double turbidity = 2.2;
-	double Yz, xz, yz;
-	double zenith;
-	double azimuth;
+	glm::vec3 sunDir;
+	glm::vec3 sunColor;
+	float turbidity = 2.2;
+	float Yz, xz, yz;
+	float zenith;
+	float azimuth;
 	ShaderProgram skyboxShader;
 
 	float skyCoeffsY[5];
 	float skyCoeffsx[5];
 	float skyCoeffsy[5];
 	
-	void calcZenitalAbsolutes();
-
+	void calcSkyValues();
+	float skyGamma(float z, float a);
 
 	GLuint waterNormalTex;
 

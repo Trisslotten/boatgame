@@ -16,5 +16,7 @@ struct Camera
 
 	void update(float dt);
 
+	glm::vec3 getLookDir();
+
 	glm::mat4 getTransform();
 };

@@ -50,6 +50,11 @@ void Camera::update(float dt)
 		position.y -= speed * dt;
 }
 
+glm::vec3 Camera::getLookDir()
+{
+	return orientation * glm::vec3(0,0,1);
+}
+
 glm::mat4 Camera::getTransform()
 {
 	auto size = Window::size();

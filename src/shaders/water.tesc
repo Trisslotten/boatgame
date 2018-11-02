@@ -5,30 +5,40 @@ in vec2 vPatchPos[];
 
 patch out vec2 tcPatchPos;
 
-
 uniform float numPatches;
 uniform vec3 size;
-
 
 uniform mat4 viewProj;
 uniform vec3 cameraPos;
 uniform vec2 windowSize;
-uniform float fov = 70.0;
+uniform float fov;
 
-const float pixelsPerQuad = 7.0;
+const float pixelsPerQuad = 12.0;
 
+
+float uhash12(uvec2 x)
+{
+	uvec2 q = 1103515245U * ((x >> 1U) ^ (uvec2(x.y, x.x)));
+	uint  n = 1103515245U * ((q.x) ^ (q.y >> 3U));
+	return float(n) * (1.0 / float(0xffffffffU));
+}
+float hash12(vec2 x) { return uhash12(uvec2(50.*x)); }
+
+
+// determine the tessellation level
 float level(vec2 offset) 
 {
 	float patchSize = size.x/numPatches;
 	vec2 pos = vPatchPos[gl_InvocationID] + 0.5*patchSize + patchSize * offset;
-	//pos += size.xz * hmPos;
 	float dist = length(vec3(pos.x, 0, pos.y) - cameraPos);
 	float b = dist*tan(fov/2.0);
 	float ratio = patchSize/(2.0*b);
 	float pixels = windowSize.x * ratio;
 	float res = pixels/pixelsPerQuad;
-	//res = pow(res, 2.f);
-	return max(pow(2.f, ceil(log(res)/log(2))), 1.f);
+	// dither for better level transition
+	//res *= 1.0 + 0.2*hash12(pos);
+	//return max(pow(2.f, ceil(log(res)/log(2))), 1.f);
+	return res;
 }
 
 void main() 
@@ -40,6 +50,8 @@ void main()
 	gl_TessLevelOuter[2] = currLevel;
 	gl_TessLevelOuter[3] = currLevel;
 
+
+	// check level of bordering quads to avoid holes in mesh
 	float left = level(vec2(-1,0));
 	if(left < currLevel) {
 		gl_TessLevelOuter[0] = left;

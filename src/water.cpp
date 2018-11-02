@@ -44,6 +44,10 @@ glm::vec3 gerstner(glm::vec2 pos, float S, float A, float L, float Q, glm::vec2 
 	result.x += Qi * A*wd.x*cos(par);
 	result.z += Qi * A*wd.y*cos(par);
 	result.y += A * sin(par);
+
+	float par2 = 0.3f*w*glm::dot(glm::mat2(0, 1, -1, 0)*wd, pos) + 10.f * hash11(i + 100);
+	result *= pow((sin(par2) + 1) / 2, 3);
+
 	return result;
 }
 
@@ -56,11 +60,21 @@ glm::vec3 displace(glm::vec3 pos, float time)
 	result.y = 0;
 	// wave spread 
 	float ws = 1.0;
-	for (int i = 0; i < 7; i++)
+	for (int i = 0; i < 3; i++)
 	{
-		glm::vec2 waveDir = rotate(windDir, ws*(hash11(i + 10) - 0.5));
-		float a = 1 / pow(2, i);
-		result += gerstner(glm::vec2(pos.x, pos.z), 1000 * a, 2 * a, 5000 * a, 0.1, waveDir, i, time);
+		float amp = 0.8;
+		float a = 1.0 / (i + 1.0);
+		glm::vec2 waveDir = rotate(windDir, ws*(hash11(i) - 0.5));
+		result += gerstner(glm::vec2(pos.x, pos.z), 1000 * a, amp*a, 5000 * a, 0.1, waveDir, i, time);
+
+		waveDir = rotate(windDir, ws*(hash11(i + 10) - 0.5));
+		result += gerstner(glm::vec2(pos.x, pos.z), 900 * a, amp*a, 4500 * a, 0.1, waveDir, i + 10, time);
+
+		waveDir = rotate(windDir, ws*(hash11(i + 20) - 0.5));
+		result += gerstner(glm::vec2(pos.x, pos.z), 800 * a, amp*a, 4000 * a, 0.1, waveDir, i + 20, time);
+
+		waveDir = rotate(windDir, ws*(hash11(i + 30) - 0.5));
+		result += gerstner(glm::vec2(pos.x, pos.z), 700 * a, amp*a, 3500 * a, 0.1, waveDir, i + 30, time);
 	}
 	return result;
 }

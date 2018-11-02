@@ -6,6 +6,7 @@ out vec4 outColor;
 in vec3 tePosition;
 in vec3 teCameraPos;
 in vec3 teSunDir;
+in vec3 teUp;
 
 // world space
 in vec3 teNonDisplaceWorld;
@@ -14,6 +15,7 @@ in mat3 teTBN;
 
 uniform vec3 cameraPos;
 uniform vec3 size;
+uniform vec3 sunColor;
 uniform float time;
 
 struct SkyCoeffs
@@ -59,23 +61,27 @@ void main()
 	//vec3 normal = calcNormal(teNonDisplace);
 	//vec3 normal = normalize(tenormal);
 
-	vec3 texNormal = normalize(texture(normalMap, 0.04*teNonDisplaceWorld.xz + vec2(0,0.01)*time).rgb*2.0 - 1.0);
+	vec3 texNormal = normalize(texture(normalMap, 0.04*teNonDisplaceWorld.xz + vec2(0,0.05)*time).rgb*2.0 - 1.0);
 	//vec3 texNormal2 = normalize(texture(normalMap, 0.02*teNonDisplaceWorld.xz + vec2(0.01,0.01)*time).rgb*2.0 - 1.0);
 	//texNormal = texNormal/2 + texNormal2/2;
 
-	vec3 normal = normalize(texNormal + vec3(0,0,1));
+	// flatten normal
+	vec3 normal = normalize(texNormal + vec3(0,0,2));
+	//vec3 normal = vec3(0,0,1);
 
 
 	//float diffuse = clamp(dot(sun, normal), 0, 1);
 	vec3 look = normalize(teCameraPos - tePosition);
-	//vec3 h = normalize(look + teSunDir);
-	//float specular = pow(clamp(dot(normal, h), 0.0, 1.0), 1000.0);
+	vec3 h = normalize(look + teSunDir);
+	float specular = pow(clamp(dot(normal, h), 0.0, 1.0), 1000.0);
+
+
 
 	vec3 color = vec3(0, 0.267, 0.545);
 
 	vec3 lighting = vec3(0);
 	//lighting += color * diffuse * 0.4;
-	//lighting += specular;
+	
 	//lighting += color * 0.2;
 	//lighting += 0.4 * skyColor * pow(clamp(1-dot(normal, look), 0.0, 1.0), 5.0);
 
@@ -105,13 +111,12 @@ void main()
 	//float d = length(cameraPos - teposition) * Kdiffuse;
 	//d = exp(-d);
 	float d = 1.0;
-
 	
 	vec3 r = reflect(-look, normal);
 	// TODO figure out how to do skyColor in tangent space or something
 	vec3 worldR = teTBN*r;
 	float a = atan(worldR.x, worldR.z);
-	float z = acos(worldR.y / length(worldR));
+	float z = acos(worldR.y);
 
 	float g = gamma(z,a);
 	z = min(z, 3.1415926/2.0);
@@ -122,10 +127,18 @@ void main()
 	
 	vec3 skyColor = rgb(Yp, xp, yp);
 
+	g = gamma(0,0);
+	z = 0;
+	Yp = Yz * perez(z, g, skyCoeffsY) / perez(0, zenith, skyCoeffsY);
+	xp = xz * perez(z, g, skyCoeffsx) / perez(0, zenith, skyCoeffsx);
+	yp = yz * perez(z, g, skyCoeffsy) / perez(0, zenith, skyCoeffsy);
+	upwelling *= 0.6*length(rgb(Yp, xp, yp));
+
 	vec3 Ci = d * ( reflectivity * skyColor + (1-reflectivity) * upwelling ) + (1-d)* air;
 	lighting += Ci;
 
 
+	lighting += specular*sunColor;
 
 
 	outColor = vec4(lighting,1);
