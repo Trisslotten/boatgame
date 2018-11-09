@@ -16,18 +16,18 @@ int main(void)
 	state->init();;
 
 	Timer frame_time;
-
+	/*
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
 
 	ImGui_ImplOpenGL3_Init();
-
+	*/
 	while (!Window::shouldClose())
 	{
 		Input::reset();
 
 		double dt = frame_time.restart();
-
+		/*
 		io.DeltaTime = dt;
 		io.DisplaySize.x = Window::size().x;
 		io.DisplaySize.y = Window::size().y;
@@ -40,11 +40,11 @@ int main(void)
 		ImGui::NewFrame();
 
 		ImGui::Text("Hello, world!");
-
+		*/
 		state->update(dt);
 		state->render();
 
-		ImGui::EndFrame();
+		//ImGui::EndFrame();
 		//ImGui::Render();
 		//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		
@@ -60,8 +60,9 @@ int main(void)
 
 		Window::update();
 	}
+	/*
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui::DestroyContext();
-
+	*/
 	return 0;
 }

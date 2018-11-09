@@ -7,8 +7,11 @@ in vec3 tePosition;
 in vec3 teCameraPos;
 in vec3 teSunDir;
 in vec3 teUp;
+in float teAzimuth;
+in float teZenith;
 
 // world space
+in vec3 teWPosition;
 in vec3 teNonDisplaceWorld;
 in float dist;
 in mat3 teTBN;
@@ -37,6 +40,7 @@ uniform sampler2D normalMap;
 float gamma(float z, float a)
 {
 	return acos(sin(zenith)*sin(z)*cos(a-azimuth)+cos(zenith)*cos(z));
+	//return acos(sin(teZenith)*sin(z)*cos(a-teAzimuth)+cos(teZenith)*cos(z));
 }
 float perez(float z, float g, SkyCoeffs coeffs)
 {
@@ -61,32 +65,33 @@ void main()
 	//vec3 normal = calcNormal(teNonDisplace);
 	//vec3 normal = normalize(tenormal);
 
-	vec3 texNormal = normalize(texture(normalMap, 0.04*teNonDisplaceWorld.xz + vec2(0,0.05)*time).rgb*2.0 - 1.0);
-	//vec3 texNormal2 = normalize(texture(normalMap, 0.02*teNonDisplaceWorld.xz + vec2(0.01,0.01)*time).rgb*2.0 - 1.0);
-	//texNormal = texNormal/2 + texNormal2/2;
+	vec3 texNormal = normalize(texture(normalMap, 0.1*teNonDisplaceWorld.xz + vec2(0,0.05)*time).rgb*2.0 - 1.0);
+	vec3 texNormal2 = normalize(texture(normalMap, 0.2*teNonDisplaceWorld.xz + vec2(0.01,0.04)*time).rgb*2.0 - 1.0);
+	texNormal = texNormal/2 + texNormal2/2;
+
+	vec3 look = normalize(teCameraPos - tePosition);
 
 	// flatten normal
-	vec3 normal = normalize(texNormal + vec3(0,0,2));
-	//vec3 normal = vec3(0,0,1);
+	float flatness = 0.5 + 3*clamp(1-look.z, 0, 1);
+	vec3 normal = normalize(texNormal + vec3(0,0,flatness));
+	//normal = vec3(0,0,1);
 
 
 	//float diffuse = clamp(dot(sun, normal), 0, 1);
-	vec3 look = normalize(teCameraPos - tePosition);
 	vec3 h = normalize(look + teSunDir);
-	float specular = pow(clamp(dot(normal, h), 0.0, 1.0), 1000.0);
+	float specular = pow(clamp(dot(normal, h), 0.0, 1.0), 2000.0);
 
 
-
-	vec3 color = vec3(0, 0.267, 0.545);
 
 	vec3 lighting = vec3(0);
-	//lighting += color * diffuse * 0.4;
-	
-	//lighting += color * 0.2;
-	//lighting += 0.4 * skyColor * pow(clamp(1-dot(normal, look), 0.0, 1.0), 5.0);
 
 	// from Tessendorf 2001
-	vec3 upwelling = vec3(0,0.2,0.3);
+	vec3 upwelling = vec3(0,0.2,0.4);
+
+	// fake subsurface scattering
+	vec3 lookW = normalize(cameraPos - teWPosition);
+	upwelling *= 1.0 + 0.7*smoothstep(-1.0, 1.0, teWPosition.y) * pow(max(1.0-lookW.y, 0.0), 2.0);
+
 	vec3 air = vec3(0.1);
 	float nSnell = 1.34;
 	float Kdiffuse = 0.91;
@@ -97,7 +102,7 @@ void main()
 	float thetai = acos(costhetai);
 	float sinthetat = sin(thetai)/nSnell;
 	float thetat = asin(sinthetat);
-	if(thetai == 0.0)
+	if(thetai == 0.0) 
 	{
 		reflectivity = (nSnell - 1)/(nSnell + 1);
 		reflectivity = reflectivity * reflectivity;
@@ -106,7 +111,7 @@ void main()
 	{
 		float fs = sin(thetat - thetai) / sin(thetat + thetai);
 		float ts = tan(thetat - thetai) / tan(thetat + thetai);
-		reflectivity = 0.5 * ( fs*fs + ts*ts );
+		reflectivity = 0.5 * (fs*fs + ts*ts);
 	}
 	//float d = length(cameraPos - teposition) * Kdiffuse;
 	//d = exp(-d);
@@ -127,17 +132,18 @@ void main()
 	
 	vec3 skyColor = rgb(Yp, xp, yp);
 
+	/*
 	g = gamma(0,0);
 	z = 0;
 	Yp = Yz * perez(z, g, skyCoeffsY) / perez(0, zenith, skyCoeffsY);
 	xp = xz * perez(z, g, skyCoeffsx) / perez(0, zenith, skyCoeffsx);
 	yp = yz * perez(z, g, skyCoeffsy) / perez(0, zenith, skyCoeffsy);
 	upwelling *= 0.6*length(rgb(Yp, xp, yp));
+	*/
+	upwelling *= 0.6;
 
-	vec3 Ci = d * ( reflectivity * skyColor + (1-reflectivity) * upwelling ) + (1-d)* air;
-	lighting += Ci;
 
-
+	lighting += reflectivity * skyColor + (1-reflectivity) * upwelling;;
 	lighting += specular*sunColor;
 
 

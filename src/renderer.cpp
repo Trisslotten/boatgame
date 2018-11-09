@@ -8,7 +8,8 @@
 
 namespace
 {
-	GLfloat skybox_verts[] = {
+	GLfloat skyboxVerts[] = 
+	{
 		// Positions          
 		-1.0f,  1.0f, -1.0f,
 		-1.0f, -1.0f, -1.0f,
@@ -52,6 +53,21 @@ namespace
 		-1.0f, -1.0f,  1.0f,
 		1.0f, -1.0f,  1.0f
 	};
+
+	GLfloat boatVerts[] = 
+	{
+		0.f, 0.5f, 1.f,
+		-1.f,0.5f,-1.f,
+		0.f,-0.5f,-1.f,
+
+		0.f, 0.5f, 1.f,
+		1.f,0.5f,-1.f,
+		0.f,-0.5f,-1.f,
+
+		-1.f,0.5f,-1.f,
+		0.f,-0.5f,-1.f,
+		1.f,0.5f,-1.f,
+	};
 }
 
 void Renderer::init()
@@ -82,10 +98,10 @@ void Renderer::init()
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (GLvoid*)0);
 	delete[] patchVertices;
 
-	waterShader.add(GL_VERTEX_SHADER,          "water.vert");
-	waterShader.add(GL_TESS_CONTROL_SHADER,    "water.tesc");
-	waterShader.add(GL_TESS_EVALUATION_SHADER, "water.tese");
-	waterShader.add(GL_FRAGMENT_SHADER,        "water.frag");
+	waterShader.add("water.vert");
+	waterShader.add("water.tesc");
+	waterShader.add("water.tese");
+	waterShader.add("water.frag");
 	waterShader.compile();
 
 
@@ -96,8 +112,8 @@ void Renderer::init()
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (GLvoid*)0);
 
-	pointShader.add(GL_VERTEX_SHADER, "point.vert");
-	pointShader.add(GL_FRAGMENT_SHADER, "point.frag");
+	pointShader.add("point.vert");
+	pointShader.add("point.frag");
 	pointShader.compile();
 
 
@@ -122,13 +138,13 @@ void Renderer::init()
 	glBindVertexArray(skyboxVAO);
 	glGenBuffers(1, &skyboxVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(skybox_verts), &skybox_verts, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVerts), &skyboxVerts, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glBindVertexArray(0);
 
-	skyboxShader.add(GL_VERTEX_SHADER, "skybox.vert");
-	skyboxShader.add(GL_FRAGMENT_SHADER, "skybox.frag");
+	skyboxShader.add("skybox.vert");
+	skyboxShader.add("skybox.frag");
 	skyboxShader.compile();
 
 	skyCoeffsY[0] = 0.1787f * turbidity - 1.4630f;
@@ -148,6 +164,23 @@ void Renderer::init()
 	skyCoeffsy[2] = -0.0079f * turbidity + 0.2102f;
 	skyCoeffsy[3] = -0.0441f * turbidity - 1.6537f;
 	skyCoeffsy[4] = -0.0109f * turbidity + 0.0529f;
+
+
+	glGenVertexArrays(1, &boatVAO);
+	glBindVertexArray(boatVAO);
+	glGenBuffers(1, &boatVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, boatVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(boatVerts), &boatVerts, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glBindVertexArray(0);
+
+
+	boatShader.add("boat.vert");
+	boatShader.add("boat.tesc");
+	boatShader.add("boat.tese");
+	boatShader.add("boat.frag");
+	boatShader.compile();
 }
 
 
@@ -235,6 +268,15 @@ void Renderer::render()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glm::mat4 camTransform = camera.getTransform();
+
+	glDisable(GL_CULL_FACE);
+	boatShader.use();
+	boatShader.uniform("viewProj", camTransform);
+	boatShader.uniform("sunDir", sunDir);
+	glBindVertexArray(boatVAO);
+	glPatchParameteri(GL_PATCH_VERTICES, 3);
+	glDrawArrays(GL_PATCHES, 0, 6);
+	glEnable(GL_CULL_FACE);
 
 
 	// render water

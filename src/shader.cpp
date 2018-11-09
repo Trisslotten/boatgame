@@ -90,6 +90,32 @@ void ShaderProgram::add(GLenum type, const std::string& path)
 	ids[type] = 0;
 }
 
+void ShaderProgram::add(const std::string& path)
+{
+	
+	std::string extension = path.substr(path.size() - 4, 4);
+
+	GLenum shaderType = GL_FRAGMENT_SHADER;
+
+	if (extension == "vert")
+		shaderType = GL_VERTEX_SHADER;
+
+	if (extension == "tesc")
+		shaderType = GL_TESS_CONTROL_SHADER;
+
+	if (extension == "tese")
+		shaderType = GL_TESS_EVALUATION_SHADER;
+
+	if (extension == "geom")
+		shaderType = GL_GEOMETRY_SHADER;
+
+	if (extension == "frag")
+		shaderType = GL_FRAGMENT_SHADER;
+
+	add(shaderType, path);
+}
+
+
 void ShaderProgram::compile()
 {
 	//std::cout << "[DEBUG] Compiling Shaders\n";

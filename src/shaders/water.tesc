@@ -4,6 +4,7 @@ layout(vertices = 1) out;
 in vec2 vPatchPos[];
 
 patch out vec2 tcPatchPos;
+patch out float tcLevel;
 
 uniform float numPatches;
 uniform vec3 size;
@@ -13,7 +14,7 @@ uniform vec3 cameraPos;
 uniform vec2 windowSize;
 uniform float fov;
 
-const float pixelsPerQuad = 12.0;
+const float pixelsPerQuad = 8.0;
 
 
 float uhash12(uvec2 x)
@@ -31,7 +32,7 @@ float level(vec2 offset)
 	float patchSize = size.x/numPatches;
 	vec2 pos = vPatchPos[gl_InvocationID] + 0.5*patchSize + patchSize * offset;
 	float dist = length(vec3(pos.x, 0, pos.y) - cameraPos);
-	float b = dist*tan(fov/2.0);
+	float b = dist*tan(fov*0.5);
 	float ratio = patchSize/(2.0*b);
 	float pixels = windowSize.x * ratio;
 	float res = pixels/pixelsPerQuad;
@@ -50,6 +51,7 @@ void main()
 	gl_TessLevelOuter[2] = currLevel;
 	gl_TessLevelOuter[3] = currLevel;
 
+	tcLevel = currLevel;
 
 	// check level of bordering quads to avoid holes in mesh
 	float left = level(vec2(-1,0));

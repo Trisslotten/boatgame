@@ -24,6 +24,7 @@ public:
 	~ShaderProgram();
 
 	void add(GLenum type, const std::string& path);
+	void add(const std::string & path);
 	void compile();
 
 	void reload();

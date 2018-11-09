@@ -149,5 +149,17 @@
     <None Include="shaders\skybox.frag">
       <Filter>Source Files\graphics\shaders</Filter>
     </None>
+    <None Include="shaders\boat.vert">
+      <Filter>Source Files\graphics\shaders</Filter>
+    </None>
+    <None Include="shaders\boat.tesc">
+      <Filter>Source Files\graphics\shaders</Filter>
+    </None>
+    <None Include="shaders\boat.tese">
+      <Filter>Source Files\graphics\shaders</Filter>
+    </None>
+    <None Include="shaders\boat.frag">
+      <Filter>Source Files\graphics\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -160,6 +160,10 @@
     <ClInclude Include="window.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\boat.frag" />
+    <None Include="shaders\boat.tesc" />
+    <None Include="shaders\boat.tese" />
+    <None Include="shaders\boat.vert" />
     <None Include="shaders\point.frag" />
     <None Include="shaders\point.vert" />
     <None Include="shaders\skybox.frag" />

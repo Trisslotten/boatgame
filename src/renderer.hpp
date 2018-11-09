@@ -11,6 +11,7 @@ class Renderer
 
 	GLuint waterPatchVAO;
 	GLuint waterPatchVBO;
+	GLuint waterNormalTex;
 	ShaderProgram waterShader;
 	glm::vec3 waterSize{5000,20,5000};
 
@@ -30,14 +31,20 @@ class Renderer
 	float azimuth;
 	ShaderProgram skyboxShader;
 
+
+	GLuint boatVAO;
+	GLuint boatVBO;
+	ShaderProgram boatShader;
+
+
 	float skyCoeffsY[5];
 	float skyCoeffsx[5];
 	float skyCoeffsy[5];
-	
+
 	void calcSkyValues();
 	float skyGamma(float z, float a);
 
-	GLuint waterNormalTex;
+	
 
 	float globalTime;
 	Camera camera;

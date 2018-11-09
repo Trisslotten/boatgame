@@ -23,15 +23,15 @@ void TestState::init()
 	}
 	
 
-	float h = 0;
-	ps.emplace_back(1, h, 1);
-	ps.emplace_back(2, h, 1);
-	ps.emplace_back(1, h, 2);
-	ps.emplace_back(2, h, 2);
-	ps.emplace_back(1, h + 1, 1);
-	ps.emplace_back(2, h + 1, 1);
-	ps.emplace_back(1, h + 1, 2);
-	ps.emplace_back(2, h + 1, 2);
+	//float h = 0;
+	//ps.emplace_back(1, h, 1);
+	//ps.emplace_back(2, h, 1);
+	//ps.emplace_back(1, h, 2);
+	//ps.emplace_back(2, h, 2);
+	//ps.emplace_back(1, h + 1, 1);
+	//ps.emplace_back(2, h + 1, 1);
+	//ps.emplace_back(1, h + 1, 2);
+	//ps.emplace_back(2, h + 1, 2);
 
 }
 
