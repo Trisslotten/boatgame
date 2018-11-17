@@ -31,14 +31,35 @@ float noise(vec2 p);
 float noise(float x);
 float hash11(float x);
 
-//https://gist.github.com/yiwenl/3f804e80d0930e34a0b33359259b556c
-vec2 rotate(vec2 v, float a) {
-	float s = sin(a);
-	float c = cos(a);
-	mat2 m = mat2(c, -s, s, c);
-	return m * v;
-}
-vec3 gerstner(vec2 pos, float S, float A, float L, float Q, vec2 wd, float i)
+struct WaveData
+{
+	float speed, amplitude, wavelength, sharpness;
+	vec2 waveDir;
+};
+
+const WaveData waveData[] = {
+	WaveData(5,   0.02, 7,    0.2,  vec2(0.910717, 0.413031)),
+	WaveData(4.5, 0.02, 5,    0.2,  vec2(-0.0361764, 0.999345)),
+	WaveData(4,   0.02, 3,    0.2,  vec2(0.795801, 0.605558)),
+	WaveData(3.5, 0.02, 2.6,  0.2,  vec2(0.187664, 0.982233)),
+	WaveData(7,   0.04, 13,   0.2,  vec2(0.187457, 0.982273)),
+	WaveData(9,   0.04, 16,   0.2,  vec2(-0.13384, 0.991003)),
+	WaveData(10,  0.04, 20,   0.1,  vec2(0.627366, 0.778725)),
+	WaveData(9,   0.04, 25,   0.1,  vec2(0.80672, 0.590934)),
+	WaveData(15,  0.07, 50,   0.1,  vec2(0.32113, 0.947035)),
+	WaveData(14,  0.07, 60,   0.1,  vec2(0.850379, 0.526171)),
+	WaveData(43,  0.12, 100,  0.1,  vec2(0.746627, 0.665243)),
+	WaveData(40,  0.12, 80,   0.1,  vec2(-0.753498, 0.65745)),
+	WaveData(63,  0.15, 200,  0.1,  vec2(-0.620674, 0.784069)),
+	WaveData(60,  0.15, 180,  0.1,  vec2(0.850194, 0.52647)),
+	WaveData(103, 0.25, 1000, 0.1,  vec2(0.229604, 0.973284)),
+	WaveData(90,  0.25, 850,  0.1,  vec2(-0.594982, 0.803739)),
+	WaveData(353, 0.5,  2000, 0.01, vec2(0.0982862, 0.995158)),
+	WaveData(340, 0.6,  1850, 0.01, vec2(0.171437, 0.985195)),
+};
+
+
+vec3 gerstner(vec2 pos, float S, float A, float L, float Q, vec2 wd)
 {
 	vec3 result = vec3(0);
 	const float pi = 3.1415;
@@ -47,83 +68,33 @@ vec3 gerstner(vec2 pos, float S, float A, float L, float Q, vec2 wd, float i)
 	float Qi = Q/(w*A);
 	float ph = S*2.0*pi/L;
 	float par = w*dot(wd, pos) + ph * time;
-	//par += 20.0*noise(pos*0.002 + 100*hash11(i));
 	result.xz += Qi*A*wd*cos(par);
 	result.y += A*sin(par);
 
-	float par2 = 0.3*w*dot(mat2(0,1,-1,0)*wd, pos);
-	//par2 += 20.0*noise(par*0.02 + 0.3*time);
-	par2 += 5.0*sin(par*0.1);
+	float par2 = 0.5*w*dot(mat2(0,1,-1,0)*wd, pos);
+	par2 += 2.0*sin(par*0.1);
+	result *= (sin(par2)+1.0)*0.5;
 
-	result *= (sin(par2)+1.1)*0.5;
-	//result *= (sin(0.1*w*dot(wd, pos))+1)/2;
 	return result;
+}
+
+vec3 gerstner(vec2 pos, WaveData d)
+{
+	return gerstner(pos, d.speed, d.amplitude, d.wavelength, d.sharpness, d.waveDir);
 }
 
 vec3 displace(vec3 pos)
 {
-	vec2 windDir = normalize(vec2(0,1));
-	vec3 result;
-	result.xz = pos.xz;
-	result.y = 0;
+	vec3 result = vec3(0);
 
-	// wave spread 
-	float ws = 2.0;
-	const int stride = 50;
-	
-	int i = 0;
-	vec2 waveDir;
+	for(int i = 0; i < waveData.length(); i++)
+	{
+		WaveData d = waveData[i];
+		result += gerstner(pos.xz, d);	
+	}
+	result *= smoothstep(7000, 0, length(cameraPos - pos));
 
-	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
-	result += gerstner(pos.xz, 5, 0.02, 7, 0.2, waveDir, i);	
-	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
-	result += gerstner(pos.xz, 4.5, 0.02, 5, 0.2, waveDir, i);
-	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
-	result += gerstner(pos.xz, 4, 0.02, 3, 0.2, waveDir, i);	
-	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
-	result += gerstner(pos.xz, 3.5, 0.02, 2.6, 0.2, waveDir, i);
-	
-
-	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
-	result += gerstner(pos.xz, 7, 0.04, 13, 0.2, waveDir, i);
-	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
-	result += gerstner(pos.xz, 9, 0.04, 16, 0.2, waveDir, i);
-
-	
-	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
-	result += gerstner(pos.xz, 10, 0.04, 20, 0.1, waveDir, i);
-	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
-	result += gerstner(pos.xz, 9, 0.04, 25, 0.1, waveDir, i);
-	
-	
-	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
-	result += gerstner(pos.xz, 15, 0.07, 50, 0.1, waveDir, i);
-	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
-	result += gerstner(pos.xz, 14, 0.07, 60, 0.1, waveDir, i);
-	
-	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
-	result += gerstner(pos.xz, 43, 0.12, 100, 0.1, waveDir, i);
-	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
-	result += gerstner(pos.xz, 40, 0.12, 80, 0.1, waveDir, i);
-	
-	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
-	result += gerstner(pos.xz, 63, 0.15, 200, 0.1, waveDir, i);
-	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
-	result += gerstner(pos.xz, 60, 0.15, 180, 0.1, waveDir, i);
-
-
-	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
-	result += gerstner(pos.xz, 103, 0.25, 1000, 0.1, waveDir, i);
-	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
-	result += gerstner(pos.xz, 90, 0.25, 850, 0.1, waveDir, i);
-	
-
-	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
-	result += gerstner(pos.xz, 353, 0.5, 2000, 0.01, waveDir, i);
-	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
-	result += gerstner(pos.xz, 340, 0.6, 1850, 0.01, waveDir, i);
-	
-
+	result.xz += pos.xz;
 	return result;
 }
 

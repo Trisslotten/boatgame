@@ -5,6 +5,7 @@
 #include "window.hpp"
 #include "lodepng.h"
 #include <glm/gtx/rotate_vector.hpp>
+#include <glm/gtx/matrix_transform_2d.hpp>
 
 namespace
 {
@@ -181,6 +182,20 @@ void Renderer::init()
 	boatShader.add("boat.tese");
 	boatShader.add("boat.frag");
 	boatShader.compile();
+
+
+
+	// output values for wave directions
+	glm::vec3 wd{ 0,1,0 };
+	srand(10);
+	for (int i = 0; i < 18; i++)
+	{
+		float a = rand() / float(RAND_MAX) - 0.5f;
+		a *= 2.3f;
+		glm::vec3 r = glm::rotate(glm::mat3(), a)*wd;
+		std::cout << r.x << ", " << r.y << "\n";
+	}
+
 }
 
 
@@ -190,8 +205,8 @@ float Renderer::skyGamma(float z, float a)
 }
 float perez(float z, float g, float coeffs[5])
 {
-	return	(1.0 + coeffs[0]*exp(coeffs[1] / cos(z)))*
-		(1.0 + coeffs[2]*exp(coeffs[3]*g) + coeffs[4]*pow(cos(g), 2.0));
+	return	(1.0f + coeffs[0]* glm::exp(coeffs[1] / glm::cos(z)))*
+		(1.0f + coeffs[2]* glm::exp(coeffs[3]*g) + coeffs[4]*pow(glm::cos(g), 2.0f));
 }
 glm::vec3 rgb(float Y, float x, float y)
 {

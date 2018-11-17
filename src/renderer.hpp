@@ -25,7 +25,7 @@ class Renderer
 	GLuint skyboxVBO;
 	glm::vec3 sunDir;
 	glm::vec3 sunColor;
-	float turbidity = 2.2;
+	float turbidity = 2.2f;
 	float Yz, xz, yz;
 	float zenith;
 	float azimuth;
