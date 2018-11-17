@@ -8,7 +8,7 @@
 
 namespace
 {
-	GLfloat skyboxVerts[] = 
+	const GLfloat skyboxVerts[] =
 	{
 		// Positions          
 		-1.0f,  1.0f, -1.0f,
@@ -54,7 +54,7 @@ namespace
 		1.0f, -1.0f,  1.0f
 	};
 
-	GLfloat boatVerts[] = 
+	const GLfloat boatVerts[] = 
 	{
 		0.f, 0.5f, 1.f,
 		-1.f,0.5f,-1.f,
@@ -67,6 +67,15 @@ namespace
 		-1.f,0.5f,-1.f,
 		0.f,-0.5f,-1.f,
 		1.f,0.5f,-1.f,
+	};
+
+	const GLfloat quadVerts[] =
+	{
+		//(x,y,z) (u,v)
+		-1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+		-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+		1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+		1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
 	};
 }
 
@@ -181,6 +190,38 @@ void Renderer::init()
 	boatShader.add("boat.tese");
 	boatShader.add("boat.frag");
 	boatShader.compile();
+
+
+	glGenFramebuffers(1, &waveFramebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, waveFramebuffer);
+	glGenTextures(1, &waveTexture);
+	glBindTexture(GL_TEXTURE_2D, waveTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, WAVE_RES, WAVE_RES, 0, GL_RGB, GL_FLOAT, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, waveTexture, 0);
+	GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0 };
+	glDrawBuffers(1, DrawBuffers);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "ERROR: Could not create waveFramebuffer\n";
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	
+
+	glGenVertexArrays(1, &quadVAO);
+	glGenBuffers(1, &quadVBO);
+	glBindVertexArray(quadVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVerts), &quadVerts, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+	glBindVertexArray(0);
+	waveShader.add("wave.vert");
+	waveShader.add("wave.frag");
+	waveShader.compile();
 }
 
 
@@ -261,9 +302,26 @@ void Renderer::render()
 		skyboxShader.reload();
 		pointShader.reload();
 	}
-
 	calcSkyValues();
 
+
+	// render wave displacement to texture
+	glBindFramebuffer(GL_FRAMEBUFFER, waveFramebuffer);
+	glViewport(0, 0, WAVE_RES, WAVE_RES);
+	glClearColor(0.f, 0.f, 1.f, 0.f);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glDepthFunc(GL_ALWAYS);
+	waveShader.use();
+	waveShader.uniform("waveTileSize", WAVE_TILE_SIZE);
+	waveShader.uniform("time", globalTime);
+	glBindVertexArray(quadVAO);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glDepthFunc(GL_LESS);
+
+	
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	auto wSize = Window::size();
+	glViewport(0, 0, wSize.x, wSize.y);
 	glClearColor(0.f, 0.f, 0.f, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -282,14 +340,17 @@ void Renderer::render()
 	// render water
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, waterNormalTex);
+	glActiveTexture(GL_TEXTURE0 + 1);
+	glBindTexture(GL_TEXTURE_2D, waveTexture);
 	waterShader.use();
 	waterShader.uniform("numPatches", float(MAX_PATCHES));
 	waterShader.uniform("normalMap", 0);
+	waterShader.uniform("waveMap", 1);
 	waterShader.uniform("size", waterSize);
 	waterShader.uniform("viewProj", camTransform);
 	waterShader.uniform("cameraPos", camera.position);
 	waterShader.uniform("time", globalTime);
-	waterShader.uniform("windowSize", Window::size());
+	waterShader.uniform("windowSize", wSize);
 	waterShader.uniform("fov", camera.fov);
 	for (int i = 0; i < 5; i++)
 	{
@@ -307,6 +368,7 @@ void Renderer::render()
 	waterShader.uniform("sunDir", sunDir);
 	waterShader.uniform("sunColor", sunColor);
 	waterShader.uniform("cameraDir", camera.getLookDir());
+	waterShader.uniform("waveTileSize", WAVE_TILE_SIZE);
 	glBindVertexArray(waterPatchVAO);
 	glPatchParameteri(GL_PATCH_VERTICES, 1);
 	glDrawArrays(GL_PATCHES, 0, MAX_PATCHES * MAX_PATCHES);
@@ -344,12 +406,13 @@ void Renderer::render()
 	skyboxShader.uniform("xz", xz);
 	skyboxShader.uniform("yz", yz);
 	skyboxShader.uniform("time", globalTime);
-	skyboxShader.uniform("resolution", Window::size());
+	skyboxShader.uniform("resolution", wSize);
 	skyboxShader.uniform("sunDir", sunDir);
 	skyboxShader.uniform("sunColor", sunColor);
 	glBindVertexArray(skyboxVAO);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glDepthFunc(GL_LESS);
+
 }
 
 

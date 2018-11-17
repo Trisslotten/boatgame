@@ -26,6 +26,8 @@ uniform vec3 size;
 uniform float time;
 uniform mat4 viewProj;
 uniform vec3 sunDir;
+uniform float waveTileSize;
+uniform sampler2D waveMap;
 
 float noise(vec2 p);
 float noise(float x);
@@ -67,6 +69,9 @@ vec3 displace(vec3 pos)
 	result.xz = pos.xz;
 	result.y = 0;
 
+	result += texture(waveMap, pos.xz / waveTileSize).rgb;
+
+	/*
 	// wave spread 
 	float ws = 2.0;
 	const int stride = 50;
@@ -122,20 +127,21 @@ vec3 displace(vec3 pos)
 	result += gerstner(pos.xz, 353, 0.5, 2000, 0.01, waveDir, i);
 	i += stride; waveDir = rotate(windDir, ws*(hash11(i)-0.5));
 	result += gerstner(pos.xz, 340, 0.6, 1850, 0.01, waveDir, i);
-	
+	*/
 
 	return result;
 }
 
 mat3 calcTBN(vec3 noDispP, vec3 p)
 {
+	float invTile = 1.0/waveTileSize;
 	// in x dir
-	vec3 px = noDispP + vec3(0.01, 0, 0);
+	vec3 px = noDispP + vec3(invTile, 0, 0);
 	// in z dir
-	vec3 pz = noDispP + vec3(0, 0, 0.01);
+	vec3 pz = noDispP + vec3(0, 0, invTile);
 	//p = displace(p);
-	px = displace(px);
-	pz = displace(pz);
+	//px = displace(px);
+	//pz = displace(pz);
 	mat3 result;
 	result[0] = normalize(pz-p);
 	result[1] = normalize(px-p);

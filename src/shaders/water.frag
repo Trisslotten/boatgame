@@ -34,6 +34,8 @@ uniform float yz;
 uniform SkyCoeffs skyCoeffsY;
 uniform SkyCoeffs skyCoeffsx;
 uniform SkyCoeffs skyCoeffsy;
+uniform float waveTileSize;
+uniform sampler2D waveMap;
 
 uniform sampler2D normalMap;
 
@@ -61,6 +63,8 @@ vec3 rgb(float Y, float x, float y)
 
 void main()
 {
+
+	
 	//vec3 normal = normalize(cross(dFdx(teposition), dFdy(teposition)));
 	//vec3 normal = calcNormal(teNonDisplace);
 	//vec3 normal = normalize(tenormal);
