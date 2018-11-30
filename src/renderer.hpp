@@ -4,10 +4,11 @@
 #include "camera.hpp"
 #include "timer.hpp"
 #include <GLFW/glfw3.h>
+#include "model.hpp"
 
 class Renderer
 {
-	const int MAX_PATCHES = 2*128;
+	const int MAX_PATCHES = 128*1.7;
 
 	GLuint waterPatchVAO;
 	GLuint waterPatchVBO;
@@ -32,11 +33,6 @@ class Renderer
 	ShaderProgram skyboxShader;
 
 
-	GLuint boatVAO;
-	GLuint boatVBO;
-	ShaderProgram boatShader;
-
-
 	float skyCoeffsY[5];
 	float skyCoeffsx[5];
 	float skyCoeffsy[5];
@@ -44,6 +40,9 @@ class Renderer
 	void calcSkyValues();
 	float skyGamma(float z, float a);
 
+
+	ShaderProgram modelShader;
+	Model model;
 	
 
 	float globalTime;

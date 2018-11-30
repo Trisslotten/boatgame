@@ -54,21 +54,6 @@ namespace
 		-1.0f, -1.0f,  1.0f,
 		1.0f, -1.0f,  1.0f
 	};
-
-	GLfloat boatVerts[] = 
-	{
-		0.f, 0.5f, 1.f,
-		-1.f,0.5f,-1.f,
-		0.f,-0.5f,-1.f,
-
-		0.f, 0.5f, 1.f,
-		1.f,0.5f,-1.f,
-		0.f,-0.5f,-1.f,
-
-		-1.f,0.5f,-1.f,
-		0.f,-0.5f,-1.f,
-		1.f,0.5f,-1.f,
-	};
 }
 
 void Renderer::init()
@@ -167,25 +152,8 @@ void Renderer::init()
 	skyCoeffsy[4] = -0.0109f * turbidity + 0.0529f;
 
 
-	glGenVertexArrays(1, &boatVAO);
-	glBindVertexArray(boatVAO);
-	glGenBuffers(1, &boatVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, boatVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(boatVerts), &boatVerts, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-	glBindVertexArray(0);
-
-
-	boatShader.add("boat.vert");
-	boatShader.add("boat.tesc");
-	boatShader.add("boat.tese");
-	boatShader.add("boat.frag");
-	boatShader.compile();
-
-
-
-	// output values for wave directions
+	/*
+	// wave directions values
 	glm::vec3 wd{ 0,1,0 };
 	srand(10);
 	for (int i = 0; i < 18; i++)
@@ -195,7 +163,13 @@ void Renderer::init()
 		glm::vec3 r = glm::rotate(glm::mat3(), a)*wd;
 		std::cout << r.x << ", " << r.y << "\n";
 	}
+	*/
 
+	modelShader.add("model.vert");
+	modelShader.add("model.frag");
+	modelShader.compile();
+
+	model.load("assets/hull.obj");
 }
 
 
@@ -284,15 +258,11 @@ void Renderer::render()
 
 	glm::mat4 camTransform = camera.getTransform();
 
-	glDisable(GL_CULL_FACE);
-	boatShader.use();
-	boatShader.uniform("viewProj", camTransform);
-	boatShader.uniform("sunDir", sunDir);
-	glBindVertexArray(boatVAO);
-	glPatchParameteri(GL_PATCH_VERTICES, 3);
-	glDrawArrays(GL_PATCHES, 0, 6);
-	glEnable(GL_CULL_FACE);
 
+	modelShader.use();
+	modelShader.uniform("viewProj", camTransform);
+	modelShader.uniform("sunDir", sunDir);
+	model.render(modelShader);
 
 	// render water
 	glActiveTexture(GL_TEXTURE0);

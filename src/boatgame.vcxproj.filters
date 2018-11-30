@@ -67,6 +67,12 @@
     <ClCompile Include="lodepng.cpp">
       <Filter>Source Files\utilities</Filter>
     </ClCompile>
+    <ClCompile Include="model.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="texture.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="shader.hpp">
@@ -85,12 +91,6 @@
       <Filter>Source Files\utilities</Filter>
     </ClInclude>
     <ClInclude Include="renderer.hpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="mesh.hpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="vertex.hpp">
       <Filter>Source Files\graphics</Filter>
     </ClInclude>
     <ClInclude Include="camera.hpp">
@@ -123,6 +123,12 @@
     <ClInclude Include="lodepng.h">
       <Filter>Source Files\utilities</Filter>
     </ClInclude>
+    <ClInclude Include="model.hpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="texture.hpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\water.frag">
@@ -149,16 +155,10 @@
     <None Include="shaders\skybox.frag">
       <Filter>Source Files\graphics\shaders</Filter>
     </None>
-    <None Include="shaders\boat.vert">
+    <None Include="shaders\model.vert">
       <Filter>Source Files\graphics\shaders</Filter>
     </None>
-    <None Include="shaders\boat.tesc">
-      <Filter>Source Files\graphics\shaders</Filter>
-    </None>
-    <None Include="shaders\boat.tese">
-      <Filter>Source Files\graphics\shaders</Filter>
-    </None>
-    <None Include="shaders\boat.frag">
+    <None Include="shaders\model.frag">
       <Filter>Source Files\graphics\shaders</Filter>
     </None>
   </ItemGroup>

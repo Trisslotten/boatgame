@@ -38,24 +38,25 @@ struct WaveData
 };
 
 const WaveData waveData[] = {
-	WaveData(5,   0.02, 7,    0.2,  vec2(0.910717, 0.413031)),
-	WaveData(4.5, 0.02, 5,    0.2,  vec2(-0.0361764, 0.999345)),
-	WaveData(4,   0.02, 3,    0.2,  vec2(0.795801, 0.605558)),
-	WaveData(3.5, 0.02, 2.6,  0.2,  vec2(0.187664, 0.982233)),
-	WaveData(7,   0.04, 13,   0.2,  vec2(0.187457, 0.982273)),
-	WaveData(9,   0.04, 16,   0.2,  vec2(-0.13384, 0.991003)),
-	WaveData(10,  0.04, 20,   0.1,  vec2(0.627366, 0.778725)),
-	WaveData(9,   0.04, 25,   0.1,  vec2(0.80672, 0.590934)),
-	WaveData(15,  0.07, 50,   0.1,  vec2(0.32113, 0.947035)),
-	WaveData(14,  0.07, 60,   0.1,  vec2(0.850379, 0.526171)),
-	WaveData(43,  0.12, 100,  0.1,  vec2(0.746627, 0.665243)),
-	WaveData(40,  0.12, 80,   0.1,  vec2(-0.753498, 0.65745)),
-	WaveData(63,  0.15, 200,  0.1,  vec2(-0.620674, 0.784069)),
-	WaveData(60,  0.15, 180,  0.1,  vec2(0.850194, 0.52647)),
-	WaveData(103, 0.25, 1000, 0.1,  vec2(0.229604, 0.973284)),
-	WaveData(90,  0.25, 850,  0.1,  vec2(-0.594982, 0.803739)),
-	WaveData(353, 0.5,  2000, 0.01, vec2(0.0982862, 0.995158)),
-	WaveData(340, 0.6,  1850, 0.01, vec2(0.171437, 0.985195)),
+	WaveData(3.5, 0.02, 2.6,  0.15,  vec2(0.187664, 0.982233)),
+	WaveData(4,   0.02, 3,    0.15,  vec2(0.795801, 0.605558)),
+	WaveData(4.5, 0.02, 5,    0.15,  vec2(-0.0361764, 0.999345)),
+	WaveData(5,   0.02, 7,    0.15,  vec2(0.910717, 0.413031)),
+	WaveData(7,   0.04, 13,   0.15,  vec2(0.187457, 0.982273)),
+	WaveData(9,   0.04, 16,   0.15,  vec2(-0.13384, 0.991003)),
+	WaveData(10,  0.04, 20,   0.15,  vec2(0.627366, 0.778725)),
+	WaveData(9,   0.04, 25,   0.15,  vec2(0.80672, 0.590934)),
+	WaveData(15,  0.07, 50,   0.15,  vec2(0.32113, 0.947035)),
+	WaveData(14,  0.07, 60,   0.15,  vec2(0.850379, 0.526171)),
+	WaveData(40,  0.12, 80,   0.10,  vec2(-0.753498, 0.65745)),
+	WaveData(43,  0.12, 100,  0.10,  vec2(0.746627, 0.665243)),
+	WaveData(60,  0.15, 180,  0.10,  vec2(0.850194, 0.52647)),
+	WaveData(63,  0.15, 200,  0.10,  vec2(-0.620674, 0.784069)),
+	WaveData(90,  0.25, 850,  0.10,  vec2(-0.594982, 0.803739)),
+	WaveData(103, 0.25, 1000, 0.10,  vec2(0.229604, 0.973284)),
+	//WaveData(453, 0.5,  3000, 0.03, vec2(0.0982862, 0.995158)),
+	//WaveData(353, 0.5,  2000, 0.03, vec2(0.187664, 0.982233)),
+	//WaveData(340, 0.6,  1850, 0.03, vec2(0.171437, 0.985195)),
 };
 
 
@@ -87,12 +88,19 @@ vec3 displace(vec3 pos)
 {
 	vec3 result = vec3(0);
 
-	for(int i = 0; i < waveData.length(); i++)
+	float look = length(cameraPos - pos);
+
+	int len = waveData.length();
+	for(int i = len-1; i >= 0 ; i--)
 	{
 		WaveData d = waveData[i];
-		result += gerstner(pos.xz, d);	
+		// to remove artifacts
+		float weight = pow(smoothstep(6000, 0, look), 200.0/(i+1.0));
+		if(weight < 0.02)
+			break;
+		result += weight * gerstner(pos.xz, d);
 	}
-	result *= smoothstep(7000, 0, length(cameraPos - pos));
+	//result *= pow(smoothstep(7000, 0, look), 10);
 
 	result.xz += pos.xz;
 	return result;
@@ -143,9 +151,6 @@ void main()
 
 	gl_Position = viewProj * vec4(pos, 1.0);
 }
-
-
-
 
 // iq's integer hash https://www.shadertoy.com/view/llGSzw
 float uhash11(uint n)
