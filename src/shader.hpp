@@ -19,6 +19,8 @@ class ShaderProgram
 	GLuint findUniformLocation(const std::string& name);
 
 	std::unordered_map<std::string, GLuint> uniform_locations;
+
+	bool compiled = false;
 public:
 	ShaderProgram();
 	~ShaderProgram();
@@ -30,6 +32,8 @@ public:
 	void reload();
 
 	void use();
+
+	bool isCompiled() { return compiled; }
 
 	void uniformv(const std::string& name, GLuint count, const glm::mat4* matrices);
 	void uniform(const std::string& name, const glm::mat4& matrix);

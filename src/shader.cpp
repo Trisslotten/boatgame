@@ -112,6 +112,9 @@ void ShaderProgram::add(const std::string& path)
 	if (extension == "frag")
 		shaderType = GL_FRAGMENT_SHADER;
 
+	if (extension == "comp")
+		shaderType = GL_COMPUTE_SHADER;
+
 	add(shaderType, path);
 }
 
@@ -140,6 +143,7 @@ void ShaderProgram::compile()
 
 	checkLinkError(id, paths_str);
 
+	compiled = true;
 }
 
 

@@ -96,7 +96,7 @@ vec3 displace(vec3 pos)
 		WaveData d = waveData[i];
 		// to remove artifacts
 		float weight = pow(smoothstep(6000, 0, look), 200.0/(i+1.0));
-		if(weight < 0.02)
+		if(weight < 0.0001)
 			break;
 		result += weight * gerstner(pos.xz, d);
 	}
@@ -127,7 +127,8 @@ void main()
 	float patchSize = size.x/numPatches;
 
 	vec3 pos;
-	pos.xz = tcPatchPos + patchSize * gl_TessCoord.xy;
+	// 1.001 to hide seeing through edges
+	pos.xz = tcPatchPos + patchSize * gl_TessCoord.xy * 1.001;
 	pos.y = 0;
 
 	teNonDisplaceWorld = pos;

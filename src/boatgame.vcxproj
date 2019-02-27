@@ -123,6 +123,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="boat.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="engine.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
@@ -136,12 +137,14 @@
     <ClCompile Include="model.cpp" />
     <ClCompile Include="renderer.cpp" />
     <ClCompile Include="shader.cpp" />
+    <ClCompile Include="skybox.cpp" />
     <ClCompile Include="texture.cpp" />
     <ClCompile Include="timer.cpp" />
     <ClCompile Include="water.cpp" />
     <ClCompile Include="window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="boat.hpp" />
     <ClInclude Include="camera.hpp" />
     <ClInclude Include="engine.hpp" />
     <ClInclude Include="imgui\imconfig.h" />
@@ -156,6 +159,7 @@
     <ClInclude Include="model.hpp" />
     <ClInclude Include="renderer.hpp" />
     <ClInclude Include="shader.hpp" />
+    <ClInclude Include="skybox.hpp" />
     <ClInclude Include="texture.hpp" />
     <ClInclude Include="timer.hpp" />
     <ClInclude Include="water.hpp" />
@@ -168,6 +172,10 @@
     <None Include="shaders\point.vert" />
     <None Include="shaders\skybox.frag" />
     <None Include="shaders\skybox.vert" />
+    <None Include="shaders\test.comp" />
+    <None Include="shaders\voxelize.frag" />
+    <None Include="shaders\voxelize.geom" />
+    <None Include="shaders\voxelize.vert" />
     <None Include="shaders\water.frag" />
     <None Include="shaders\water.tesc" />
     <None Include="shaders\water.tese" />

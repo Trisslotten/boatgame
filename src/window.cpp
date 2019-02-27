@@ -72,7 +72,8 @@ namespace
 			
 			double elapsed = frame_timer.restart();
 			double fps = frames / elapsed;
-			std::string new_title = title + " | fps: " + std::to_string(fps);
+			double ms = elapsed / frames;
+			std::string new_title = title + " | fps: " + std::to_string(fps) + " | ms: " + std::to_string(ms);
 			
 			/*
 			accum_frame_time -= update_time;
@@ -117,7 +118,7 @@ void Window::open(int width, int height)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
 
 	// MSAA
-	glfwWindowHint(GLFW_SAMPLES, 8);
+	glfwWindowHint(GLFW_SAMPLES, 1);
 
 	window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
 	if (!window)

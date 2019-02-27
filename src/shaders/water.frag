@@ -37,6 +37,8 @@ uniform SkyCoeffs skyCoeffsy;
 
 uniform sampler2D normalMap;
 
+const float PI = 3.1415926;
+
 float gamma(float z, float a)
 {
 	return acos(sin(zenith)*sin(z)*cos(a-azimuth)+cos(zenith)*cos(z));
@@ -62,11 +64,10 @@ vec3 rgb(float Y, float x, float y)
 void main()
 {
 	//vec3 normal = normalize(cross(dFdx(teposition), dFdy(teposition)));
-	//vec3 normal = calcNormal(teNonDisplace);
 	//vec3 normal = normalize(tenormal);
 
-	vec3 texNormal = normalize(texture(normalMap, 0.1*teNonDisplaceWorld.xz + vec2(0,0.05)*time).rgb*2.0 - 1.0);
-	vec3 texNormal2 = normalize(texture(normalMap, 0.2*teNonDisplaceWorld.xz + vec2(0.01,0.04)*time).rgb*2.0 - 1.0);
+	vec3 texNormal = normalize(texture(normalMap, 0.03*teNonDisplaceWorld.xz + vec2(0,0.01)*time).rgb*2.0 - 1.0);
+	vec3 texNormal2 = normalize(texture(normalMap, 0.2*teNonDisplaceWorld.zx + vec2(0.01,0.04)*time).rgb*2.0 - 1.0);
 	texNormal = texNormal/2 + texNormal2/2;
 
 	vec3 look = normalize(teCameraPos - tePosition);
@@ -124,13 +125,19 @@ void main()
 	float z = acos(worldR.y);
 
 	float g = gamma(z,a);
-	z = min(z, 3.1415926/2.0);
+	float rz = z;
+	z = min(z, PI/2.0);
 
 	float Yp = Yz * perez(z, g, skyCoeffsY) / perez(0, zenith, skyCoeffsY);
 	float xp = xz * perez(z, g, skyCoeffsx) / perez(0, zenith, skyCoeffsx);
 	float yp = yz * perez(z, g, skyCoeffsy) / perez(0, zenith, skyCoeffsy);
 	
 	vec3 skyColor = rgb(Yp, xp, yp);
+	skyColor = pow(skyColor, vec3(0.8));
+
+	float t = smoothstep(PI/2.0, 0.8*PI/2.0, rz);
+	skyColor = upwelling * t + skyColor * (1.0-t);
+
 
 	/*
 	g = gamma(0,0);
@@ -140,7 +147,7 @@ void main()
 	yp = yz * perez(z, g, skyCoeffsy) / perez(0, zenith, skyCoeffsy);
 	upwelling *= 0.6*length(rgb(Yp, xp, yp));
 	*/
-	upwelling *= 0.6;
+	upwelling *= 0.4;
 
 
 	lighting += reflectivity * skyColor + (1-reflectivity) * upwelling;;

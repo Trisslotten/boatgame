@@ -7,10 +7,15 @@ layout(location = 2) in vec2 tex;
 out vec3 vnormal;
 
 
+uniform float time;
 uniform mat4 viewProj;
 
 void main()
 {
-	vnormal = normal;
-	gl_Position = viewProj * vec4(pos, 1.0);
+	float s = sin(time);
+	float c = cos(time);
+	mat3 rot = mat3(vec3(s, c, 0), vec3(-c, s, 0), vec3(0, 0, 1));
+
+	vnormal = normalize(rot*normal);
+	gl_Position = viewProj * vec4(rot*pos, 1.0);
 }

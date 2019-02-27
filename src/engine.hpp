@@ -4,6 +4,7 @@
 #include "camera.hpp"
 #include "renderer.hpp"
 #include "water.hpp"
+#include "boat.hpp"
 
 class EngineState
 {
@@ -28,16 +29,18 @@ public:
 };
 
 
-class TestState : public EngineState
+class PlayingState : public EngineState
 {
-	std::vector<glm::vec3> ps;
+	std::vector<Part> parts;
+	Boat boat;
 
 	Timer globalTimer;
 	float elapsed;
 
-	Water water;
 	Camera camera;
 	Renderer renderer;
+
+	ShaderProgram computeTest;
 public:
 	void init() override;
 	void update(double dt) override;

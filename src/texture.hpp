@@ -15,7 +15,7 @@ private:
 public:
 	Texture();
 	void hint(GLenum pname, GLint param);
-	bool loadTexture(const std::string& file, int format = 0);
+	bool loadTexture(const std::string& file);
 	void bind(unsigned int slot) const;
 	unsigned getID();
 };

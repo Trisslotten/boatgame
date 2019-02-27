@@ -12,7 +12,7 @@ int main(void)
 	Window::open();
 	Input::initialize();
 
-	EngineState* state = new TestState();
+	EngineState* state = new PlayingState();
 	state->init();;
 
 	Timer frame_time;

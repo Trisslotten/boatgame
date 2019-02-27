@@ -94,15 +94,29 @@ class Model
 	void recursiveFlatten(Node* node, glm::mat4 transform = glm::mat4());
 	void recursiveDeleteNodes(Node* node);
 
+
+	void calcBounds();
+	void voxelize();
+	GLuint voxelTex;
+	const int VOXEL_RES = 24;
+
+
 	Texture texture;
 	std::vector<Mesh> meshes;
 	std::vector<Mesh*> modelMeshes;
 
 	bool loaded = false;
 
+	glm::vec3 minBounds;
+	glm::vec3 maxBounds;
 public:
 	//std::vector<Material> materials;
-	void load(const std::string& file);
+	bool load(const std::string& file);
 
 	void render(ShaderProgram& shader);
+
+	glm::vec3 getMinBounds();
+	glm::vec3 getMaxBounds();
+
+
 };

@@ -73,6 +73,12 @@
     <ClCompile Include="texture.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="boat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="skybox.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="shader.hpp">
@@ -129,6 +135,12 @@
     <ClInclude Include="texture.hpp">
       <Filter>Source Files\graphics</Filter>
     </ClInclude>
+    <ClInclude Include="boat.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="skybox.hpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\water.frag">
@@ -159,6 +171,18 @@
       <Filter>Source Files\graphics\shaders</Filter>
     </None>
     <None Include="shaders\model.frag">
+      <Filter>Source Files\graphics\shaders</Filter>
+    </None>
+    <None Include="shaders\test.comp">
+      <Filter>Source Files\graphics\shaders</Filter>
+    </None>
+    <None Include="shaders\voxelize.vert">
+      <Filter>Source Files\graphics\shaders</Filter>
+    </None>
+    <None Include="shaders\voxelize.frag">
+      <Filter>Source Files\graphics\shaders</Filter>
+    </None>
+    <None Include="shaders\voxelize.geom">
       <Filter>Source Files\graphics\shaders</Filter>
     </None>
   </ItemGroup>

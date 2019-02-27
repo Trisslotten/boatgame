@@ -84,8 +84,13 @@ void main()
 
 
 	float dist = length(sunDir - dir);
+	
 
-	outColor = vec4(rgb(Yp, xp, yp), 1);
+	vec3 skyColor = rgb(Yp, xp, yp);
+	skyColor = pow(skyColor, vec3(0.8));
+
+	outColor = vec4(skyColor, 1);
+
 
 	//outColor.rgb *= 0.7;
 

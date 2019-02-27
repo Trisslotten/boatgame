@@ -14,7 +14,7 @@ uniform vec3 cameraPos;
 uniform vec2 windowSize;
 uniform float fov;
 
-const float pixelsPerQuad = 8.0;
+const float pixelsPerQuad = 10.0;
 
 
 float uhash12(uvec2 x)

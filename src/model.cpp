@@ -11,6 +11,12 @@
 #include <stack>
 
 
+namespace
+{
+	ShaderProgram voxelizeShader;
+}
+
+
 Model::Mesh::Mesh(aiMesh * mesh)
 {
 	name = mesh->mName.C_Str();
@@ -86,16 +92,16 @@ Model::Mesh::Mesh(const std::vector<Vertex>& _vertices, const std::vector<GLuint
 
 Model::Mesh::~Mesh()
 {
-		glDeleteBuffers(1, &ebo);
-		glDeleteBuffers(1, &vbo);
-		glDeleteVertexArrays(1, &vao);
+	glDeleteBuffers(1, &ebo);
+	glDeleteBuffers(1, &vbo);
+	glDeleteVertexArrays(1, &vao);
 }
 
 void Model::Mesh::bind()
 {
-		glBindVertexArray(vao);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 }
 
 void Model::Mesh::unbind()
@@ -104,12 +110,12 @@ void Model::Mesh::unbind()
 }
 
 
-void Model::load(const std::string & file)
+bool Model::load(const std::string & file)
 {
 	if (loaded)
 	{
 		std::cout << "[WARNING] model '" << file << "', already loaded. Skipping\n";
-		return;
+		return true;
 	}
 	std::cout << "[DEBUG] loading: '" << file << "'\n";
 
@@ -128,7 +134,7 @@ void Model::load(const std::string & file)
 	if (!scene)
 	{
 		std::cout << "[ERROR] Could not open model '" << file << "': " + std::string(aiGetErrorString()) << "\n";
-		return;
+		return false;
 	}
 
 	loaded = true;
@@ -169,7 +175,7 @@ void Model::load(const std::string & file)
 			tex_file = model_dir + std::string(filename.C_Str());
 		}
 		std::cout << "[DEBUG] Processing mat: '" << matName << "', using texture: '" << tex_file << "'\n";
-		if (!texture.loadTexture(tex_file, 1))
+		if (!texture.loadTexture(tex_file))
 		{
 			//std::cout << "\tERROR: Could not load texture: '" << tex_file << "'\n";
 		}
@@ -190,6 +196,11 @@ void Model::load(const std::string & file)
 
 	aiReleaseImport(scene);
 
+
+	calcBounds();
+	voxelize();
+
+	return true;
 }
 
 
@@ -246,6 +257,85 @@ void Model::recursiveDeleteNodes(Node * node)
 	}
 }
 
+void Model::calcBounds()
+{
+	minBounds = glm::vec3(std::numeric_limits<float>::max());
+	maxBounds = glm::vec3(std::numeric_limits<float>::lowest());
+	for (const auto& m : meshes)
+	{
+		for (const auto& v : m.vertices)
+		{
+			minBounds = glm::min(v.position, minBounds);
+			maxBounds = glm::max(v.position, maxBounds);
+		}
+	}
+}
+
+void Model::voxelize()
+{
+	// :^)
+	if (!voxelizeShader.isCompiled())
+	{
+		voxelizeShader.add("voxelize.vert");
+		voxelizeShader.add("voxelize.geom");
+		voxelizeShader.add("voxelize.frag");
+		voxelizeShader.compile();
+	}
+
+	std::vector<uint8_t> img;
+	img.resize(VOXEL_RES*VOXEL_RES*VOXEL_RES);
+	std::fill(img.begin(), img.end(), 0);
+	glGenTextures(1, &voxelTex);
+	glBindTexture(GL_TEXTURE_3D, voxelTex);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+	glTexStorage3D(GL_TEXTURE_3D, 1, GL_R8I, VOXEL_RES, VOXEL_RES, VOXEL_RES);
+	//glTexImage3D(GL_TEXTURE_3D, 1, GL_R8I, VOXEL_RES, VOXEL_RES, VOXEL_RES, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, img.data());
+
+	
+	glViewport(0, 0, VOXEL_RES, VOXEL_RES);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
+	glDisable(GL_CULL_FACE);
+
+	glBindImageTexture(1, voxelTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R8I);
+
+	glm::mat4 viewProj = glm::ortho(-1.f, 1.f, -1.f, 1.f, -1.f, 1.f);
+
+	voxelizeShader.use();
+	voxelizeShader.uniform("img", 1);
+	voxelizeShader.uniform("viewProj", viewProj);
+	for (auto mesh : modelMeshes)
+	{
+		mesh->bind();
+		glDrawElements(GL_TRIANGLES, mesh->numIndices(), GL_UNSIGNED_INT, 0);
+	}
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+	glGetTextureImage(voxelTex, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, img.size(), img.data());
+
+	glEnable(GL_CULL_FACE);
+	
+	for (int i = 0; i < VOXEL_RES; i++)
+	{
+		for (int j = 0; j < VOXEL_RES; j++)
+		{
+			for (int k = 0; k < VOXEL_RES; k++)
+			{
+				std::cout << (int)img[k + (j + i * VOXEL_RES) * VOXEL_RES] <<  " ";
+			}
+			std::cout << "\n";
+		}
+		std::cout << "\n";
+	}
+	
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+}
+
 
 void Model::render(ShaderProgram & shader)
 {
@@ -258,3 +348,4 @@ void Model::render(ShaderProgram & shader)
 	}
 	
 }
+

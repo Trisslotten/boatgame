@@ -15,5 +15,4 @@ void main()
 	lighting += 0.2;
 
 	outColor = vec4(lighting,1);
-	outColor = vec4(normal,1);
 }
