@@ -40,6 +40,8 @@ class PlayingState : public EngineState
 	Camera camera;
 	Renderer renderer;
 
+	Model* model;
+
 	ShaderProgram computeTest;
 public:
 	void init() override;

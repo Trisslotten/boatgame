@@ -5,7 +5,9 @@
 #include <string>
 #include <glm/glm.hpp>
 
-
+#define uniformDec(glmtype) \
+void uniformv(const std::string& name, GLuint count, const glmtype* values); \
+void uniform(const std::string& name, const glmtype & value);
 
 class ShaderProgram
 {
@@ -35,23 +37,33 @@ public:
 
 	bool isCompiled() { return compiled; }
 
-	void uniformv(const std::string& name, GLuint count, const glm::mat4* matrices);
-	void uniform(const std::string& name, const glm::mat4& matrix);
+	uniformDec(GLfloat);
+	uniformDec(glm::vec2);
+	uniformDec(glm::vec3);
+	uniformDec(glm::vec4);
+	
+	uniformDec(GLint);
+	uniformDec(glm::ivec2);
+	uniformDec(glm::ivec3);
+	uniformDec(glm::ivec4);
 
-	void uniformv(const std::string& name, GLuint count, const GLfloat* values);
-	void uniform(const std::string& name, const GLfloat value);
+	uniformDec(GLuint);
+	uniformDec(glm::uvec2);
+	uniformDec(glm::uvec3);
+	uniformDec(glm::uvec4);
 
-	void uniformv(const std::string& name, GLuint count, const glm::vec2* vectors);
-	void uniform(const std::string& name, const glm::vec2& vector);
+	uniformDec(glm::mat2);
+	uniformDec(glm::mat3);
+	uniformDec(glm::mat4);
 
-	void uniformv(const std::string& name, GLuint count, const glm::vec3* vectors);
-	void uniform(const std::string& name, const glm::vec3& vector);
+	uniformDec(glm::mat2x3);
+	uniformDec(glm::mat3x2);
 
-	void uniformv(const std::string& name, GLuint count, const glm::vec4* vectors);
-	void uniform(const std::string& name, const glm::vec4& vector);
+	uniformDec(glm::mat2x4);
+	uniformDec(glm::mat4x2);
 
-	void uniformv(const std::string& name, GLuint count, const GLint* values);
-	void uniform(const std::string& name, const GLint value);
+	uniformDec(glm::mat3x4);
+	uniformDec(glm::mat4x3);
 
 	GLuint getId()
 	{

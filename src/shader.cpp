@@ -5,6 +5,18 @@
 #include <glm/gtc/type_ptr.hpp>
 
 
+#define uniformDef(glFunc, glmtype, basetype) \
+void ShaderProgram::uniformv(const std::string & name, GLuint count, const glmtype * values) \
+{ glFunc(findUniformLocation(name), count, (basetype*) values); } \
+void ShaderProgram::uniform(const std::string & name, const glmtype & value) \
+{ uniformv(name, 1, &value); }
+
+#define uniformMatrixDef(glFunc, glmtype, basetype) \
+void ShaderProgram::uniformv(const std::string & name, GLuint count, const glmtype * values) \
+{ glFunc(findUniformLocation(name), count, GL_FALSE, (basetype*) values); } \
+void ShaderProgram::uniform(const std::string & name, const glmtype & value) \
+{ uniformv(name, 1, &value); }
+
 
 void checkLinkError(GLuint id, const std::string& paths)
 {
@@ -187,63 +199,30 @@ GLuint ShaderProgram::findUniformLocation(const std::string & name)
 	return uniform_location;
 }
 
+uniformDef(glUniform1fv, GLfloat,   GLfloat);
+uniformDef(glUniform2fv, glm::vec2, GLfloat);
+uniformDef(glUniform3fv, glm::vec3, GLfloat);
+uniformDef(glUniform4fv, glm::vec4, GLfloat);
 
-void ShaderProgram::uniformv(const std::string & name, GLuint count, const glm::mat4* matrices)
-{
-	glUniformMatrix4fv(findUniformLocation(name), count, GL_FALSE, (GLfloat*)matrices);
-}
-void ShaderProgram::uniform(const std::string & name, const glm::mat4& matrix)
-{
-	uniformv(name, 1, &matrix);
-}
+uniformDef(glUniform1iv, GLint,      GLint);
+uniformDef(glUniform2iv, glm::ivec2, GLint);
+uniformDef(glUniform3iv, glm::ivec3, GLint);
+uniformDef(glUniform4iv, glm::ivec4, GLint);
 
+uniformDef(glUniform1uiv, GLuint,     GLuint);
+uniformDef(glUniform2uiv, glm::uvec2, GLuint);
+uniformDef(glUniform3uiv, glm::uvec3, GLuint);
+uniformDef(glUniform4uiv, glm::uvec4, GLuint);
 
-void ShaderProgram::uniformv(const std::string & name, GLuint count, const GLfloat* values)
-{
-	glUniform1fv(findUniformLocation(name), count, (GLfloat*)values);
-}
-void ShaderProgram::uniform(const std::string & name, GLfloat value)
-{
-	uniformv(name, 1, &value);
-}
+uniformMatrixDef(glUniformMatrix2fv, glm::mat2, GLfloat);
+uniformMatrixDef(glUniformMatrix3fv, glm::mat3, GLfloat);
+uniformMatrixDef(glUniformMatrix4fv, glm::mat4, GLfloat);
 
+uniformMatrixDef(glUniformMatrix2x3fv, glm::mat2x3, GLfloat);
+uniformMatrixDef(glUniformMatrix3x2fv, glm::mat3x2, GLfloat);
 
-void ShaderProgram::uniformv(const std::string & name, GLuint count, const glm::vec2* vectors)
-{
-	glUniform2fv(findUniformLocation(name), count, (GLfloat*)vectors);
-}
-void ShaderProgram::uniform(const std::string & name, const glm::vec2& vector)
-{
-	uniformv(name, 1, &vector);
-}
+uniformMatrixDef(glUniformMatrix2x4fv, glm::mat2x4, GLfloat);
+uniformMatrixDef(glUniformMatrix4x2fv, glm::mat4x2, GLfloat);
 
-
-void ShaderProgram::uniformv(const std::string & name, GLuint count, const glm::vec3* vectors)
-{
-	glUniform3fv(findUniformLocation(name), count, (GLfloat*)vectors);
-}
-void ShaderProgram::uniform(const std::string & name, const glm::vec3& vector)
-{
-	uniformv(name, 1, &vector);
-}
-
-void ShaderProgram::uniformv(const std::string & name, GLuint count, const glm::vec4* vectors)
-{
-	glUniform4fv(findUniformLocation(name), count, (GLfloat*)vectors);
-}
-void ShaderProgram::uniform(const std::string & name, const glm::vec4& vector)
-{
-	uniformv(name, 1, &vector);
-}
-
-
-
-
-void ShaderProgram::uniformv(const std::string & name, GLuint count, const GLint* values)
-{
-	glUniform1iv(findUniformLocation(name), count, values);
-}
-void ShaderProgram::uniform(const std::string & name, GLint value)
-{
-	uniformv(name, 1, &value);
-}
+uniformMatrixDef(glUniformMatrix3x4fv, glm::mat3x4, GLfloat);
+uniformMatrixDef(glUniformMatrix4x3fv, glm::mat4x3, GLfloat);

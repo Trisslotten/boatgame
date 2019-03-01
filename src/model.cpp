@@ -295,8 +295,9 @@ void Model::voxelize()
 	glTexStorage3D(GL_TEXTURE_3D, 1, GL_R8I, VOXEL_RES, VOXEL_RES, VOXEL_RES);
 	//glTexImage3D(GL_TEXTURE_3D, 1, GL_R8I, VOXEL_RES, VOXEL_RES, VOXEL_RES, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, img.data());
 
-	
-	glViewport(0, 0, VOXEL_RES, VOXEL_RES);
+	int multisamples = 2;
+	glm::ivec2 viewPortSize(multisamples*VOXEL_RES);
+	glViewport(0, 0, viewPortSize.x, viewPortSize.y);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
@@ -309,6 +310,7 @@ void Model::voxelize()
 	voxelizeShader.use();
 	voxelizeShader.uniform("img", 1);
 	voxelizeShader.uniform("viewProj", viewProj);
+	voxelizeShader.uniform("viewPortSize", viewPortSize);
 	for (auto mesh : modelMeshes)
 	{
 		mesh->bind();
@@ -320,13 +322,15 @@ void Model::voxelize()
 
 	glEnable(GL_CULL_FACE);
 	
+	
 	for (int i = 0; i < VOXEL_RES; i++)
 	{
 		for (int j = 0; j < VOXEL_RES; j++)
 		{
 			for (int k = 0; k < VOXEL_RES; k++)
 			{
-				std::cout << (int)img[k + (j + i * VOXEL_RES) * VOXEL_RES] <<  " ";
+				auto cell = img[k + (j + i * VOXEL_RES) * VOXEL_RES];
+				std::cout << (int)cell <<  "";
 			}
 			std::cout << "\n";
 		}
@@ -334,6 +338,8 @@ void Model::voxelize()
 	}
 	
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+	glGenVertexArrays(1, &voxelVao);
 }
 
 
@@ -347,5 +353,15 @@ void Model::render(ShaderProgram & shader)
 		glDrawElements(GL_TRIANGLES, mesh->numIndices(), GL_UNSIGNED_INT, 0);
 	}
 	
+}
+
+void Model::renderVoxels(ShaderProgram & shader)
+{
+	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+	shader.uniform("voxels", 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_3D, voxelTex);
+	glBindVertexArray(voxelVao);
+	glDrawArrays(GL_POINTS, 0, VOXEL_RES*VOXEL_RES*VOXEL_RES);
 }
 

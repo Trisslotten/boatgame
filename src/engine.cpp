@@ -13,7 +13,7 @@ void PlayingState::init()
 	computeTest.compile();
 
 
-	renderer.getModel("assets/hull.obj");
+	model = renderer.getModel("assets/sphere.obj");
 }
 
 void PlayingState::update(double dt)
@@ -29,6 +29,8 @@ void PlayingState::update(double dt)
 void PlayingState::render()
 {
 	renderer.setGlobalTime(elapsed);
+
+	renderer.submit(model);
 
 	renderer.render();
 }

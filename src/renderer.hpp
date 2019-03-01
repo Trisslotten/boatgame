@@ -22,6 +22,10 @@ class Renderer
 	ShaderProgram modelShader;
 	std::unordered_map<std::string, Model> models;
 
+	ShaderProgram voxelShader;
+
+	std::vector<Model*> drawList;
+
 	float globalTime;
 	Camera camera;
 	glm::mat4 cameraTransform;
@@ -36,4 +40,6 @@ public:
 	glm::mat4 getCameraTransform() { return cameraTransform; }
 
 	Model* getModel(const std::string& filepath);
+
+	void submit(Model* model);
 };

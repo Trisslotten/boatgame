@@ -66,6 +66,11 @@ void Renderer::init()
 	modelShader.add("model.frag");
 	modelShader.compile();
 
+	voxelShader.add("voxel.vert");
+	voxelShader.add("voxel.geom");
+	voxelShader.add("voxel.frag");
+	voxelShader.compile();
+
 	skybox.init();
 	skybox.update();
 }
@@ -85,13 +90,25 @@ void Renderer::render()
 	glClearColor(0.f, 0.f, 0.f, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	/*
+	
 	modelShader.use();
 	modelShader.uniform("viewProj", cameraTransform);
-	modelShader.uniform("sunDir", sunDir);
+	//modelShader.uniform("sunDir", sunDir);
 	modelShader.uniform("time", globalTime);
-	model.render(modelShader);
-	*/
+	for(auto m : drawList)
+	{
+		//m->render(modelShader);
+	}
+	
+	voxelShader.use();
+	voxelShader.uniform("viewProj", cameraTransform);
+	voxelShader.uniform("fov", camera.fov);
+	for (auto m : drawList)
+	{
+		m->renderVoxels(modelShader);
+	}
+	drawList.clear();
+
 
 	// render water
 	glActiveTexture(GL_TEXTURE0);
@@ -136,4 +153,9 @@ Model* Renderer::getModel(const std::string& filepath)
 			models.erase(filepath);
 	}
 	return result;
+}
+
+void Renderer::submit(Model * model)
+{
+	drawList.push_back(model);
 }

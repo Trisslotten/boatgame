@@ -173,6 +173,9 @@
     <None Include="shaders\skybox.frag" />
     <None Include="shaders\skybox.vert" />
     <None Include="shaders\test.comp" />
+    <None Include="shaders\voxel.frag" />
+    <None Include="shaders\voxel.geom" />
+    <None Include="shaders\voxel.vert" />
     <None Include="shaders\voxelize.frag" />
     <None Include="shaders\voxelize.geom" />
     <None Include="shaders\voxelize.vert" />

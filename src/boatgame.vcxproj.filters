@@ -185,5 +185,14 @@
     <None Include="shaders\voxelize.geom">
       <Filter>Source Files\graphics\shaders</Filter>
     </None>
+    <None Include="shaders\voxel.vert">
+      <Filter>Source Files\graphics\shaders</Filter>
+    </None>
+    <None Include="shaders\voxel.geom">
+      <Filter>Source Files\graphics\shaders</Filter>
+    </None>
+    <None Include="shaders\voxel.frag">
+      <Filter>Source Files\graphics\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

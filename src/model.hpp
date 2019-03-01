@@ -98,7 +98,8 @@ class Model
 	void calcBounds();
 	void voxelize();
 	GLuint voxelTex;
-	const int VOXEL_RES = 24;
+	const int VOXEL_RES = 32;
+	GLuint voxelVao;
 
 
 	Texture texture;
@@ -115,8 +116,6 @@ public:
 
 	void render(ShaderProgram& shader);
 
-	glm::vec3 getMinBounds();
-	glm::vec3 getMaxBounds();
-
+	void renderVoxels(ShaderProgram& shader);
 
 };
