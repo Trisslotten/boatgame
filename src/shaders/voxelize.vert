@@ -13,5 +13,4 @@ void main()
 	
 	gl_Position = viewProj * vec4(pos, 1.0);
 	v_pos = gl_Position.xyz;
-
 }

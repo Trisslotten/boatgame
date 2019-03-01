@@ -295,7 +295,7 @@ void Model::voxelize()
 	glTexStorage3D(GL_TEXTURE_3D, 1, GL_R8I, VOXEL_RES, VOXEL_RES, VOXEL_RES);
 	//glTexImage3D(GL_TEXTURE_3D, 1, GL_R8I, VOXEL_RES, VOXEL_RES, VOXEL_RES, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, img.data());
 
-	int multisamples = 2;
+	int multisamples = 4;
 	glm::ivec2 viewPortSize(multisamples*VOXEL_RES);
 	glViewport(0, 0, viewPortSize.x, viewPortSize.y);
 	glClear(GL_DEPTH_BUFFER_BIT);
@@ -310,7 +310,6 @@ void Model::voxelize()
 	voxelizeShader.use();
 	voxelizeShader.uniform("img", 1);
 	voxelizeShader.uniform("viewProj", viewProj);
-	voxelizeShader.uniform("viewPortSize", viewPortSize);
 	for (auto mesh : modelMeshes)
 	{
 		mesh->bind();
@@ -330,11 +329,11 @@ void Model::voxelize()
 			for (int k = 0; k < VOXEL_RES; k++)
 			{
 				auto cell = img[k + (j + i * VOXEL_RES) * VOXEL_RES];
-				std::cout << (int)cell <<  "";
+				//std::cout << (int)cell <<  "";
 			}
-			std::cout << "\n";
+			//std::cout << "\n";
 		}
-		std::cout << "\n";
+		//std::cout << "\n";
 	}
 	
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -357,11 +356,14 @@ void Model::render(ShaderProgram & shader)
 
 void Model::renderVoxels(ShaderProgram & shader)
 {
+
+	glDisable(GL_CULL_FACE);
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 	shader.uniform("voxels", 0);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_3D, voxelTex);
 	glBindVertexArray(voxelVao);
 	glDrawArrays(GL_POINTS, 0, VOXEL_RES*VOXEL_RES*VOXEL_RES);
+	glEnable(GL_CULL_FACE);
 }
 

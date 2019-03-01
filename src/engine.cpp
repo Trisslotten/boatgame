@@ -13,7 +13,7 @@ void PlayingState::init()
 	computeTest.compile();
 
 
-	model = renderer.getModel("assets/sphere.obj");
+	model = renderer.getModel("assets/monke.obj");
 }
 
 void PlayingState::update(double dt)

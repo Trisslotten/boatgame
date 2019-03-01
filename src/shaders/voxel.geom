@@ -1,17 +1,32 @@
 #version 440 core
 
 layout(points) in;
-layout(points, max_vertices = 1) out;
+layout(triangle_strip, max_vertices = 14) out;
 
 in int vertID[];
 
-flat out int gID;
+out vec3 g_pos;
 
 uniform isampler3D voxels;
 uniform mat4 viewProj;
-uniform ivec2 viewPortSize;
-uniform float fov;
 
+// https://stackoverflow.com/questions/28375338/cube-using-single-gl-triangle-strip
+const float cube_strip[] = {
+    -1.f, 1.f, 1.f,     // Front-top-left
+    1.f, 1.f, 1.f,      // Front-top-right
+    -1.f, -1.f, 1.f,    // Front-bottom-left
+    1.f, -1.f, 1.f,     // Front-bottom-right
+    1.f, -1.f, -1.f,    // Back-bottom-right
+    1.f, 1.f, 1.f,      // Front-top-right
+    1.f, 1.f, -1.f,     // Back-top-right
+    -1.f, 1.f, 1.f,     // Front-top-left
+    -1.f, 1.f, -1.f,    // Back-top-left
+    -1.f, -1.f, 1.f,    // Front-bottom-left
+    -1.f, -1.f, -1.f,   // Back-bottom-left
+    1.f, -1.f, -1.f,    // Back-bottom-right
+    -1.f, 1.f, -1.f,    // Back-top-left
+    1.f, 1.f, -1.f      // Back-top-right
+};
 
 void main()
 {
@@ -28,13 +43,19 @@ void main()
 
 	if(v > 0)
 	{
-		vec3 pos = (vec3(i)*2.0-1.0) / vec3(size) + vec3(0,2,0);
-		gl_Position = viewProj * vec4(pos, 1.0);
-		vec4 p1 = viewProj * vec4(pos+vec3(0,-.5/size.y, 0), 1.0);
-		vec4 p2 = viewProj * vec4(pos+vec3(0, .5/size.y, 0), 1.0);
-		gl_PointSize = 1080.0*length(p1.xyz/p1.w - p2.xyz/p2.w);
-		gID = vertID[0];
-		EmitVertex();
+		vec3 voxelSize = 1.0 / vec3(size);
+		vec3 voxelPos = (vec3(i)*2.0-1.0) / vec3(size) + vec3(0,2,0);
+		for(int j = 0; j < 14; j++)
+		{
+			vec3 vertPos;
+			vertPos.x = cube_strip[3*j];
+			vertPos.y = cube_strip[3*j+1];
+			vertPos.z = cube_strip[3*j+2];
+			vec3 pos = voxelPos + voxelSize * vertPos;
+			gl_Position = viewProj * vec4(pos, 1.0);
+			g_pos = pos;
+			EmitVertex();
+		}
 		EndPrimitive();
 	}
 }

@@ -98,7 +98,7 @@ class Model
 	void calcBounds();
 	void voxelize();
 	GLuint voxelTex;
-	const int VOXEL_RES = 32;
+	const int VOXEL_RES = 8;
 	GLuint voxelVao;
 
 
