@@ -26,6 +26,9 @@ uniform vec3 size;
 uniform float time;
 uniform mat4 viewProj;
 uniform vec3 sunDir;
+uniform float waterSizeScale;
+
+uniform sampler2D dispTex;
 
 float noise(vec2 p);
 float noise(float x);
@@ -38,13 +41,13 @@ struct WaveData
 };
 
 const WaveData waveData[] = {
-	WaveData(3.5, 0.02, 2.6,  0.15,  vec2(0.187664, 0.982233)),
-	WaveData(4,   0.02, 3,    0.15,  vec2(0.795801, 0.605558)),
-	WaveData(4.5, 0.02, 5,    0.15,  vec2(-0.0361764, 0.999345)),
-	WaveData(5,   0.02, 7,    0.15,  vec2(0.910717, 0.413031)),
-	WaveData(7,   0.04, 13,   0.15,  vec2(0.187457, 0.982273)),
-	WaveData(9,   0.04, 16,   0.15,  vec2(-0.13384, 0.991003)),
-	WaveData(10,  0.04, 20,   0.15,  vec2(0.627366, 0.778725)),
+	//WaveData(3.5, 0.02, 2.6,  0.15,  vec2(0.187664, 0.982233)),
+	//WaveData(4,   0.02, 3,    0.15,  vec2(0.795801, 0.605558)),
+	//WaveData(4.5, 0.02, 5,    0.15,  vec2(-0.0361764, 0.999345)),
+	//WaveData(5,   0.02, 7,    0.15,  vec2(0.910717, 0.413031)),
+	//WaveData(7,   0.04, 13,   0.15,  vec2(0.187457, 0.982273)),
+	//WaveData(9,   0.04, 16,   0.15,  vec2(-0.13384, 0.991003)),
+	//WaveData(10,  0.04, 20,   0.15,  vec2(0.627366, 0.778725)),
 	WaveData(9,   0.04, 25,   0.15,  vec2(0.80672, 0.590934)),
 	WaveData(15,  0.07, 50,   0.15,  vec2(0.32113, 0.947035)),
 	WaveData(14,  0.07, 60,   0.15,  vec2(0.850379, 0.526171)),
@@ -86,7 +89,8 @@ vec3 gerstner(vec2 pos, WaveData d)
 
 vec3 displace(vec3 pos)
 {
-	vec3 result = vec3(0);
+	vec3 result = pos;
+/*
 
 	float look = length(cameraPos - pos);
 
@@ -102,7 +106,10 @@ vec3 displace(vec3 pos)
 	}
 	//result *= pow(smoothstep(7000, 0, look), 10);
 
-	result.xz += pos.xz;
+*/
+
+	result += waterSizeScale*texture(dispTex, pos.xz/waterSizeScale).rgb;
+
 	return result;
 }
 

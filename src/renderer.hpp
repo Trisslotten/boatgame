@@ -9,13 +9,20 @@
 
 class Renderer
 {
-	const int MAX_PATCHES = 128*1.7;
+	const int MAX_PATCHES = 128*2.0;
 
 	GLuint waterPatchVAO;
 	GLuint waterPatchVBO;
 	GLuint waterNormalTex;
 	ShaderProgram waterShader;
 	glm::vec3 waterSize{5000,20,5000};
+
+
+	GLuint waterDispTex;
+	const int WATER_TEX_SIZE = 512;
+	const float WATER_SIZE_SCALE = 100;
+	const float WATER_FREQ_SCALE = 100;
+	ShaderProgram waterDispShader;
 
 	Skybox skybox;
 	

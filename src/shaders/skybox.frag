@@ -81,13 +81,14 @@ void main()
 	float xp = xz * perez(z, g, skyCoeffsx) / perez(0, zenith, skyCoeffsx);
 	float yp = yz * perez(z, g, skyCoeffsy) / perez(0, zenith, skyCoeffsy);
 
-
-
 	float dist = length(sunDir - dir);
 	
 
 	vec3 skyColor = rgb(Yp, xp, yp);
-	skyColor = pow(skyColor, vec3(0.8));
+	//skyColor = pow(skyColor, vec3(0.8));
+
+	float exposure = -1.0;
+	skyColor = 1.0 - exp(skyColor * exposure);
 
 	outColor = vec4(skyColor, 1);
 

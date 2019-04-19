@@ -85,6 +85,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)lib\glfw\include;$(SolutionDir)lib\glm\include;$(SolutionDir)lib\glew\include;$(SolutionDir)lib\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\glew\lib\Release\x64;$(SolutionDir)lib\glfw\lib\debug;$(SolutionDir)lib\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -179,6 +180,7 @@
     <None Include="shaders\voxelize.frag" />
     <None Include="shaders\voxelize.geom" />
     <None Include="shaders\voxelize.vert" />
+    <None Include="shaders\water.comp" />
     <None Include="shaders\water.frag" />
     <None Include="shaders\water.tesc" />
     <None Include="shaders\water.tese" />

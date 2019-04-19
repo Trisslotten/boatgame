@@ -62,6 +62,38 @@ void Renderer::init()
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 
+	glGenTextures(1, &waterDispTex);
+	glBindTexture(GL_TEXTURE_2D, waterDispTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, WATER_TEX_SIZE, WATER_TEX_SIZE, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	waterDispShader.add("water.comp");
+	waterDispShader.compile();
+
+	glBindImageTexture(1, waterDispTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+	waterDispShader.use();
+	waterDispShader.uniform("texSize", float(WATER_TEX_SIZE));
+	waterDispShader.uniform("time", 0);
+	waterDispShader.uniform("waterSizeScale", WATER_SIZE_SCALE);
+	waterDispShader.uniform("waterFreqScale", WATER_FREQ_SCALE);
+	int localSize = 16;
+	// TODO: check if correct
+	int numGroups = WATER_TEX_SIZE / localSize;
+	glDispatchCompute(numGroups, numGroups, 1);
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+	std::vector<glm::vec4> test;
+	test.resize(WATER_TEX_SIZE*WATER_TEX_SIZE);
+	glGetTextureImage(waterDispTex, 0, GL_RGBA, GL_FLOAT, test.size() * sizeof(glm::vec4), test.data());
+	for (int i = 0; i < 20; i++)
+	{
+		std::cout << test[i].x << ", " << test[i].y << ", " << test[i].z << ", " << test[i].w << "\n";
+	}
+
 	modelShader.add("model.vert");
 	modelShader.add("model.frag");
 	modelShader.compile();
@@ -81,6 +113,20 @@ void Renderer::render()
 	{
 		waterShader.reload();
 	}
+	/*
+	glBindImageTexture(1, waterDispTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+	waterDispShader.use();
+	waterDispShader.uniform("texSize", float(WATER_TEX_SIZE));
+	waterDispShader.uniform("time", globalTime);
+	waterDispShader.uniform("waterSizeScale", WATER_SIZE_SCALE);
+	waterDispShader.uniform("waterFreqScale", WATER_FREQ_SCALE);
+	int localSize = 16;
+	// TODO: check if correct
+	int numGroups = WATER_TEX_SIZE / localSize;
+	glDispatchCompute(numGroups, numGroups, 1);
+	*/
+
+
 	cameraTransform = camera.getTransform();
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -105,7 +151,9 @@ void Renderer::render()
 	voxelShader.uniform("fov", camera.fov);
 	for (auto m : drawList)
 	{
+		glCullFace(GL_FRONT);
 		m->renderVoxels(modelShader);
+		glCullFace(GL_BACK);
 	}
 	drawList.clear();
 
@@ -113,9 +161,12 @@ void Renderer::render()
 	// render water
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, waterNormalTex);
+	glActiveTexture(GL_TEXTURE0+1);
+	glBindTexture(GL_TEXTURE_2D, waterDispTex);
 	waterShader.use();
-	waterShader.uniform("numPatches", float(MAX_PATCHES));
 	waterShader.uniform("normalMap", 0);
+	waterShader.uniform("dispTex", 1);
+	waterShader.uniform("numPatches", float(MAX_PATCHES));
 	waterShader.uniform("size", waterSize);
 	waterShader.uniform("viewProj", cameraTransform);
 	waterShader.uniform("cameraPos", camera.position);
@@ -124,6 +175,7 @@ void Renderer::render()
 	waterShader.uniform("fov", camera.fov);
 	waterShader.uniform("cameraDir", camera.getLookDir());
 	waterShader.uniform("sunDir", skybox.getSunDir());
+	waterShader.uniform("waterSizeScale", WATER_SIZE_SCALE);
 	skybox.setUniforms(waterShader);
 	glBindVertexArray(waterPatchVAO);
 	glPatchParameteri(GL_PATCH_VERTICES, 1);

@@ -356,14 +356,11 @@ void Model::render(ShaderProgram & shader)
 
 void Model::renderVoxels(ShaderProgram & shader)
 {
-
-	glDisable(GL_CULL_FACE);
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 	shader.uniform("voxels", 0);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_3D, voxelTex);
 	glBindVertexArray(voxelVao);
 	glDrawArrays(GL_POINTS, 0, VOXEL_RES*VOXEL_RES*VOXEL_RES);
-	glEnable(GL_CULL_FACE);
 }
 
