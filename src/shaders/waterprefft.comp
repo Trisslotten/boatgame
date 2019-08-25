@@ -1,0 +1,98 @@
+#version 440 core
+
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(binding = 1, rg32f) writeonly uniform image2D img;
+
+uniform float fftSize;
+uniform float waterScale;
+
+const float PI = 3.14159265359;
+const float TWO_PI = 2.*3.14159265359;
+const float INV_SQRT2 = 1./sqrt(2.);
+const float GRAV = 9.82;
+const float DEPTH = 10;
+
+float uhash12(uvec2 x)
+{
+	uvec2 q = 1103515245U * ((x >> 1U) ^ (uvec2(x.y, x.x)));
+	uint  n = 1103515245U * ((q.x) ^ (q.y >> 3U));
+	return float(n) * (1.0 / float(0xffffffffU));
+}
+float hash12(vec2 x) { return uhash12(uvec2((ivec2(500.*x) + 1073741824))); }
+
+// https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform
+vec2 gauss(vec2 uv)
+{
+	float u0 = hash12(uv);
+	float u1 = hash12(uv + 100);
+	return sqrt(-2. * log(u0))*vec2(cos(2*PI * u1), sin(2*PI*u1));
+}
+
+float Ph(vec2 kvec)
+{
+	// wave height roughly 
+	float A = 50000;
+	float k = length(kvec);
+	vec2 nk = normalize(kvec);
+	if(k < 0.0001) {
+		k = 0.0001;
+		nk = vec2(0);
+	}
+	// wind speed
+	float V = 31;
+	float L = V*V/GRAV;
+	// small waves cutoff. not used 
+	float l = 1;
+	// wind direction
+	vec2 w = normalize(vec2(1,1));
+	
+	float alignment = 3;
+	return A*exp(-1/(k*k*L*L))*pow(abs(dot(nk,w)),alignment)/pow(k, 4);
+}
+
+// e^(i*x)
+vec2 cexp(float x)
+{
+	return vec2(cos(x), sin(x));
+}
+
+// https://shadertoyunofficial.wordpress.com/2016/07/21/usual-tricks-in-shadertoyglsl/
+vec2 cmult(vec2 a, vec2 b)
+{
+	return mat2(a,-a.y,a.x) * b;
+}
+
+vec2 conj(vec2 c)
+{
+	return vec2(c.x,-c.y);
+}
+
+float w(float k)
+{
+	const float repeatTime = 100.0;
+	const float w0 = 2*PI/repeatTime;
+	float w = sqrt(GRAV * k);
+	//float w = sqrt(GRAV * k * tanh(k * DEPTH);
+	w = floor(w/w0)*w0;
+	return w;
+}
+
+vec2 hFA0(vec2 uv)
+{
+	vec2 rand = gauss(uv);
+	return INV_SQRT2 * rand * sqrt(Ph(uv));
+}
+
+void main()
+{
+	ivec2 i = ivec2(gl_GlobalInvocationID.xy);
+	
+
+	vec2 cuv = 2*PI*(vec2(i) - 0.5*fftSize)/waterScale;
+
+	vec4 result = vec4(0);
+	result.xy = hFA0(cuv);
+
+	imageStore(img, i, result);
+}

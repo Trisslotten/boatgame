@@ -2,52 +2,18 @@
 
 layout(local_size_x = 16, local_size_y = 16) in;
 
-layout(binding = 1, rgba32f) writeonly uniform image2D img;
+layout(binding = 1, rgba32f) writeonly uniform image2D dispImg;
+layout(binding = 2, rg32f) readonly uniform image2D butterflyResult;
 
-uniform float texSize;
-uniform float time;
-uniform float waterSizeScale;
-uniform float waterFreqScale;
+uniform float fftSize;
+uniform float waterSize;
+uniform float waterScale;
 
 const float PI = 3.14159265359;
 const float INV_SQRT2 = 1./sqrt(2.);
 const float GRAV = 9.82;
 const float DEPTH = 10;
 
-
-float uhash12(uvec2 x)
-{
-	uvec2 q = 1103515245U * ((x >> 1U) ^ (uvec2(x.y, x.x)));
-	uint  n = 1103515245U * ((q.x) ^ (q.y >> 3U));
-	return float(n) * (1.0 / float(0xffffffffU));
-}
-float hash12(vec2 x) { return uhash12(uvec2((ivec2(500.*x) + 1073741824))); }
-
-// https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform
-float gauss(vec2 uv)
-{
-	float u0 = hash12(uv);
-	float u1 = hash12(uv + 100);
-	return sqrt(-2. * log(u0))*cos(2*PI * u1);
-}
-
-float Ph(vec2 kvec)
-{
-	// wave height roughly 
-	float A = 0.001;
-	float k = length(kvec);
-	if(k < 0.0001)
-		k = 0.0001;
-	// wind speed
-	float V = 40;
-	float L = V*V/GRAV;
-	// small waves cutoff. not used 
-	float l = 1;
-	// wind direction
-	vec2 w = normalize(vec2(1,1));
-	float alignment = 4;
-	return A*exp(-1/(k*k*L*L))*pow(abs(dot(kvec,w)),alignment)/pow(k, 4);
-}
 
 // e^(i*x)
 vec2 cexp(float x)
@@ -66,68 +32,15 @@ vec2 conj(vec2 c)
 	return vec2(c.x,-c.y);
 }
 
-float w(float k)
-{
-	const float repeatTime = 100.0;
-	const float w0 = 2*PI/repeatTime;
-	float w = sqrt(GRAV * k);
-	//float w = sqrt(GRAV * k * tanh(k * DEPTH);
-	return floor(w/w0)*w0;
-	//return w;
-}
-
-vec2 hFA0(vec2 uv)
-{
-	
-	//float r1 = 2*hash12(uv)-1;
-	//float r2 = 2*hash12(uv+100)-1;
-	
-	float r1 = gauss(uv);
-	float r2 = gauss(uv+100);
-
-	return INV_SQRT2*vec2(r1,r2)*sqrt(Ph(uv));
-}
-
-vec2 hFA(vec2 uv) 
-{
-	float t = 0;//-waterFreqScale/imageSize(img).x;
-	float k = length(uv);
-
-	float r1 = 0;// 2*PI*hash12(uv+50);
-	float r2 = 0;// 2*PI*hash12(uv+150);
-
-	return cmult(hFA0(uv), cexp(w(k)*time+r1)) + cmult(conj(hFA0(-uv+t)), cexp(-w(k)*time+r2));
-}
-
 
 void main()
 {
 	ivec2 i = ivec2(gl_GlobalInvocationID.xy);
-	vec4 disp = vec4(0);
-	
-	vec2 uv = i/texSize;
-	uv = (uv-0.5)*waterFreqScale;
+	vec4 dispacement = vec4(0);
 
-	//disp.rg = hFA(uv);
+	float perm = 1.0-2.0*mod(i.x+i.y,2);
 
-	int N = 256;
+	dispacement.y = 0.1*waterScale * perm*imageLoad(butterflyResult, i).x / (fftSize*fftSize);
 
-	vec2 sum = vec2(0);
-	for(int x = 0; x < N; x++)
-	{
-		for(int y = 0; y < N; y++)
-		{
-			vec2 cuv = 2*PI*(vec2(x,y) - 0.5*N)/waterFreqScale;
-			sum += cmult(hFA(cuv), cexp(dot(cuv, uv)));
-		}
-	}
-	//disp.y = length(sum) / (N*N);
-	disp.y = sum.r/ (N*N);
-
-	//disp.y = 10*Ph(uv);
-
-	//disp.rg = sum;
-	//disp.y = Ph(uv) * ;
-
-	imageStore(img, i, disp);
+	imageStore(dispImg, i, dispacement);
 }

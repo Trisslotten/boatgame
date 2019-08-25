@@ -1,0 +1,62 @@
+#version 440 core
+
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(binding = 1, rg32f) readonly uniform image2D imgh0;
+layout(binding = 2, rg32f) writeonly uniform image2D imgh;
+
+uniform float time;
+uniform float fftSize;
+uniform float waterScale;
+
+const float PI = 3.14159265359;
+const float INV_SQRT2 = 1./sqrt(2.);
+const float GRAV = 9.82;
+const float DEPTH = 10;
+
+// e^(i*x)
+vec2 cexp(float x)
+{
+	return vec2(cos(x), sin(x));
+}
+
+// https://shadertoyunofficial.wordpress.com/2016/07/21/usual-tricks-in-shadertoyglsl/
+vec2 cmult(vec2 a, vec2 b)
+{
+	return mat2(a,-a.y,a.x) * b;
+}
+
+vec2 conj(vec2 c)
+{
+	return vec2(c.x,-c.y);
+}
+
+float w(float k)
+{
+	const float repeatTime = 100.0;
+	const float w0 = 2*PI/repeatTime;
+	float w = sqrt(GRAV * k);
+	//float w = sqrt(GRAV * k * tanh(k * DEPTH);
+	w = floor(w/w0)*w0;
+	return w;
+}
+
+void main()
+{
+	ivec2 i = ivec2(gl_GlobalInvocationID.xy);
+	
+	int N = int(fftSize);
+	vec2 uv = 2*PI*(vec2(i) - 0.5*fftSize)/waterScale;
+	float k = length(uv);
+
+	vec2 h0 = imageLoad(imgh0, i).xy;
+	vec2 mh0 = imageLoad(imgh0, ivec2(N)-i).xy;
+
+	vec4 result = vec4(0);
+	result.xy += cmult(h0, cexp(w(k)*time));
+	//result.xy += cmult(conj(mh0), cexp(-w(k)*time));
+
+	//result.xy = h0;
+
+	imageStore(imgh, i, result);
+}

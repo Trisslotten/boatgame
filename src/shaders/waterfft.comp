@@ -1,0 +1,60 @@
+#version 440 core
+
+// https://www.youtube.com/watch?v=8kgpxtggFog
+
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(binding = 0, rg32f) uniform image2D readTex;
+layout(binding = 1, rg32f) uniform image2D writeTex;
+
+layout(binding = 2, rgba32f) uniform image2D twiddleTex;
+
+uniform int isHorizontalPass;
+uniform int stage;
+
+// https://shadertoyunofficial.wordpress.com/2016/07/21/usual-tricks-in-shadertoyglsl/
+vec2 cmult(vec2 a, vec2 b)
+{
+	return mat2(a,-a.y,a.x) * b;
+}
+
+
+void horizontalPass()
+{
+	ivec2 i = ivec2(gl_GlobalInvocationID.xy);
+
+	vec4 data = imageLoad(twiddleTex, ivec2(stage, i.x));
+	vec2 p = imageLoad(readTex, ivec2(data.z, i.y)).xy;
+	vec2 q = imageLoad(readTex, ivec2(data.w, i.y)).xy;
+	vec2 w = data.xy;
+
+	vec2 H = p + cmult(w, q);
+
+	imageStore(writeTex, i, vec4(H, 0, 1));
+}
+
+void verticalPass()
+{
+	ivec2 i = ivec2(gl_GlobalInvocationID.xy);
+
+	vec4 data = imageLoad(twiddleTex, ivec2(stage, i.y));
+	vec2 p = imageLoad(readTex, ivec2(i.x, data.z)).xy;
+	vec2 q = imageLoad(readTex, ivec2(i.x, data.w)).xy;
+	vec2 w = data.xy;
+
+	vec2 H = p + cmult(w, q);
+
+	imageStore(writeTex, i, vec4(H, 0, 1));
+}
+
+void main()
+{
+	if(isHorizontalPass == 1)
+	{
+		horizontalPass();
+	}
+	else 
+	{
+		verticalPass();
+	}
+}

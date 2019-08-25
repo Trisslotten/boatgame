@@ -36,7 +36,7 @@ uniform SkyCoeffs skyCoeffsY;
 uniform SkyCoeffs skyCoeffsx;
 uniform SkyCoeffs skyCoeffsy;
 
-uniform float waterSizeScale;
+uniform float waterScale;
 
 uniform sampler2D dispTex;
 uniform sampler2D normalMap;
@@ -136,13 +136,13 @@ vec3 displace(vec3 pos)
 	}
 	//result *= pow(smoothstep(7000, 0, look), 10);
 	*/
-	result += waterSizeScale*texture(dispTex, pos.xz/waterSizeScale).rgb;
+	result += texture(dispTex, pos.xz/waterScale).rgb;
 	return result;
 }
 
 vec3 calcNormal()
 {
-	float t = waterSizeScale/textureSize(dispTex, 0).x;
+	float t = waterScale/textureSize(dispTex, 0).x;
 
 	// in x dir
 	vec3 px = teNonDisplaceWorld + vec3(t, 0, 0);

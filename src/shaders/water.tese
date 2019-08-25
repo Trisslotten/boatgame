@@ -26,7 +26,7 @@ uniform vec3 size;
 uniform float time;
 uniform mat4 viewProj;
 uniform vec3 sunDir;
-uniform float waterSizeScale;
+uniform float waterScale;
 
 uniform sampler2D dispTex;
 
@@ -108,7 +108,7 @@ vec3 displace(vec3 pos)
 
 */
 
-	result += waterSizeScale*texture(dispTex, pos.xz/waterSizeScale).rgb;
+	result += texture(dispTex, pos.xz/waterScale).rgb;
 
 	return result;
 }

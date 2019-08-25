@@ -197,5 +197,17 @@
     <None Include="shaders\water.comp">
       <Filter>Source Files\graphics\shaders</Filter>
     </None>
+    <None Include="shaders\waterh.comp">
+      <Filter>Source Files\graphics\shaders</Filter>
+    </None>
+    <None Include="shaders\waterprefft.comp">
+      <Filter>Source Files\graphics\shaders</Filter>
+    </None>
+    <None Include="shaders\twiddle.comp">
+      <Filter>Source Files\graphics\shaders</Filter>
+    </None>
+    <None Include="shaders\waterfft.comp">
+      <Filter>Source Files\graphics\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

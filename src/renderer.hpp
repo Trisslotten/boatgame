@@ -19,9 +19,16 @@ class Renderer
 
 
 	GLuint waterDispTex;
-	const int WATER_TEX_SIZE = 512;
-	const float WATER_SIZE_SCALE = 100;
-	const float WATER_FREQ_SCALE = 100;
+	GLuint waterh0Tex;
+	GLuint waterhTex;
+	GLuint waterTwiddleTex;
+	GLuint waterPing;
+	GLuint waterPong;
+	bool readPing = true;
+	ShaderProgram waterTwiddleShader;
+	ShaderProgram waterPreFFTShader;
+	ShaderProgram waterhShader;
+	ShaderProgram waterFFTShader;
 	ShaderProgram waterDispShader;
 
 	Skybox skybox;

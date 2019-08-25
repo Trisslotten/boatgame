@@ -1,0 +1,63 @@
+#version 440 core
+
+// https://www.youtube.com/watch?v=8kgpxtggFog
+
+layout(local_size_x = 1, local_size_y = 16) in;
+
+layout(binding = 3, rgba32f) writeonly uniform image2D twiddleTex;
+
+uniform float fftSize;
+
+const float PI = 3.14159265359;
+
+vec2 cexp(float x)
+{
+	return vec2(cos(x), sin(x));
+}
+
+uint bitReverse(uint x)
+{
+	uint rev = bitfieldReverse(x);
+	rev = rev >> uint(32-log2(fftSize));
+	return rev;
+}
+
+void main()
+{
+	vec2 i = gl_GlobalInvocationID.xy;
+	float k = mod(i.y * (fftSize / pow(2, i.x+1)), fftSize);
+
+	vec2 twiddle = cexp(2.0*PI*k/fftSize);
+
+	int bfSpan = int(pow(2, i.x));
+
+	int bfWing = 0;
+	if(mod(i.y, pow(2, i.x+1)) < pow(2, i.x))
+		bfWing = 1;
+
+	if(i.x == 0.0)
+	{
+		uint rev = bitReverse(uint(i.y));
+		if(bfWing == 1)
+		{
+			uint revp1 = bitReverse(uint(i.y+1));
+			imageStore(twiddleTex, ivec2(i), vec4(twiddle, rev, revp1));
+		}
+		else
+		{
+			uint revm1 = bitReverse(uint(i.y-1));
+			imageStore(twiddleTex, ivec2(i), vec4(twiddle, revm1, rev));
+		}
+	}
+	else 
+	{
+		if(bfWing == 1)
+		{
+			imageStore(twiddleTex, ivec2(i), vec4(twiddle, i.y, i.y + bfSpan));
+		}
+		else
+		{
+			imageStore(twiddleTex, ivec2(i), vec4(twiddle, i.y - bfSpan, i.y));
+		}
+	}
+}
