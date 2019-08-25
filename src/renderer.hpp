@@ -21,6 +21,8 @@ class Renderer
 	GLuint waterDispTex;
 	GLuint waterh0Tex;
 	GLuint waterhTex;
+	GLuint waterhdxTex;
+	GLuint waterhdzTex;
 	GLuint waterTwiddleTex;
 	GLuint waterPing;
 	GLuint waterPong;

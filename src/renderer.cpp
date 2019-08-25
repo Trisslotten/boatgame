@@ -9,8 +9,8 @@
 
 namespace
 {
-	const int WATER_TEX_SIZE = 1024;
-	const int WATER_FFT_SIZE = 1024;
+	const int WATER_TEX_SIZE = 256;
+	const int WATER_FFT_SIZE = 256;
 	const int WATER_FFT_LOG2 = glm::round(glm::log2(double(WATER_FFT_SIZE)));
 	const float WATER_SCALE = 100;
 	const int COMPUTE_LOCAL_SIZE = 16;
@@ -97,6 +97,24 @@ void Renderer::init()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+	glGenTextures(1, &waterhdxTex);
+	glBindTexture(GL_TEXTURE_2D, waterhdxTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, WATER_FFT_SIZE, WATER_FFT_SIZE, 0, GL_RG, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glGenTextures(1, &waterhdzTex);
+	glBindTexture(GL_TEXTURE_2D, waterhdzTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, WATER_FFT_SIZE, WATER_FFT_SIZE, 0, GL_RG, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
 	glGenTextures(1, &waterPing);
 	glBindTexture(GL_TEXTURE_2D, waterPing);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, WATER_FFT_SIZE, WATER_FFT_SIZE, 0, GL_RG, GL_UNSIGNED_BYTE, 0);
@@ -161,7 +179,7 @@ void Renderer::init()
 	glGetTextureImage(waterTwiddleTex, 0, GL_RGBA, GL_FLOAT, test.size() * sizeof(glm::vec4), test.data());
 	for (int i = 0; i < WATER_FFT_LOG2*WATER_TEX_SIZE; i+= WATER_FFT_LOG2)
 	{
-		std::cout << test[i].z << ",\t" << test[i].w << "\n";
+		//std::cout << test[i].z << ",\t" << test[i].w << "\n";
 		//std::cout << test[i].x << ", " << test[i].y << ", " << test[i].z << ", " << test[i].w << "\n";
 	}
 	
@@ -188,8 +206,10 @@ void Renderer::render()
 	int numGroupsFFT = WATER_FFT_SIZE / COMPUTE_LOCAL_SIZE;
 	int numGroupsWater = WATER_TEX_SIZE / COMPUTE_LOCAL_SIZE;
 
-	glBindImageTexture(1, waterh0Tex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
-	glBindImageTexture(2, waterhTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+	glBindImageTexture(0, waterh0Tex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+	glBindImageTexture(1, waterhTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+	glBindImageTexture(2, waterhdxTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+	glBindImageTexture(3, waterhdzTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
 	waterhShader.use();
 	waterhShader.uniform("waterScale", WATER_SCALE);
 	waterhShader.uniform("fftSize", float(WATER_FFT_SIZE));
@@ -197,64 +217,151 @@ void Renderer::render()
 	glDispatchCompute(numGroupsFFT, numGroupsFFT, 1);
 	glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
-	// horizontal pass
-	readPing = true;
-	glBindImageTexture(2, waterTwiddleTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
-	waterFFTShader.use();
-	waterFFTShader.uniform("isHorizontalPass", 1);
-	for (int i = 0; i < WATER_FFT_LOG2; i++)
 	{
-		if (readPing)
+		// horizontal pass
+		readPing = true;
+		glBindImageTexture(2, waterTwiddleTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+		waterFFTShader.use();
+		waterFFTShader.uniform("isHorizontalPass", 1);
+		for (int i = 0; i < WATER_FFT_LOG2; i++)
 		{
+			if (readPing)
+			{
+				glBindImageTexture(0, waterPing, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+				glBindImageTexture(1, waterPong, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+			}
+			else
+			{
+				glBindImageTexture(0, waterPong, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+				glBindImageTexture(1, waterPing, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+			}
 			if (i == 0)
 				glBindImageTexture(0, waterhTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
-			else
+			waterFFTShader.uniform("stage", i);
+			glDispatchCompute(numGroupsFFT, numGroupsFFT, 1);
+			glMemoryBarrier(GL_ALL_BARRIER_BITS);
+			readPing = !readPing;
+		}
+		// vertical pass
+		waterFFTShader.uniform("isHorizontalPass", 0);
+		for (int i = 0; i < WATER_FFT_LOG2; i++)
+		{
+			if (readPing)
+			{
 				glBindImageTexture(0, waterPing, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
-			glBindImageTexture(1, waterPong, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+				glBindImageTexture(1, waterPong, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+			}
+			else
+			{
+				glBindImageTexture(0, waterPong, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+				glBindImageTexture(1, waterPing, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+			}
+			if (i == WATER_FFT_LOG2 - 1)
+				glBindImageTexture(1, waterhTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+			waterFFTShader.uniform("stage", i);
+			glDispatchCompute(numGroupsFFT, numGroupsFFT, 1);
+			glMemoryBarrier(GL_ALL_BARRIER_BITS);
+			readPing = !readPing;
 		}
-		else
+
+
+		// horizontal pass dx
+		readPing = true;
+		glBindImageTexture(2, waterTwiddleTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+		waterFFTShader.use();
+		waterFFTShader.uniform("isHorizontalPass", 1);
+		for (int i = 0; i < WATER_FFT_LOG2; i++)
 		{
-			glBindImageTexture(0, waterPong, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
-			glBindImageTexture(1, waterPing, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+			if (readPing)
+			{
+				glBindImageTexture(0, waterPing, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+				glBindImageTexture(1, waterPong, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+			}
+			else
+			{
+				glBindImageTexture(0, waterPong, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+				glBindImageTexture(1, waterPing, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+			}
+			if (i == 0)
+				glBindImageTexture(0, waterhdxTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+			waterFFTShader.uniform("stage", i);
+			glDispatchCompute(numGroupsFFT, numGroupsFFT, 1);
+			glMemoryBarrier(GL_ALL_BARRIER_BITS);
+			readPing = !readPing;
 		}
-		waterFFTShader.uniform("stage", i);
+		// vertical pass
+		waterFFTShader.uniform("isHorizontalPass", 0);
+		for (int i = 0; i < WATER_FFT_LOG2; i++)
+		{
+			if (readPing)
+			{
+				glBindImageTexture(0, waterPing, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+				glBindImageTexture(1, waterPong, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+			}
+			else
+			{
+				glBindImageTexture(0, waterPong, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+				glBindImageTexture(1, waterPing, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+			}
+			if (i == WATER_FFT_LOG2 - 1)
+				glBindImageTexture(1, waterhdxTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+			waterFFTShader.uniform("stage", i);
+			glDispatchCompute(numGroupsFFT, numGroupsFFT, 1);
+			glMemoryBarrier(GL_ALL_BARRIER_BITS);
+			readPing = !readPing;
+		}
 
-		glDispatchCompute(numGroupsFFT, numGroupsFFT, 1);
-
-		glMemoryBarrier(GL_ALL_BARRIER_BITS);
-
-		readPing = !readPing;
+		// horizontal pass dz
+		readPing = true;
+		glBindImageTexture(2, waterTwiddleTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+		waterFFTShader.use();
+		waterFFTShader.uniform("isHorizontalPass", 1);
+		for (int i = 0; i < WATER_FFT_LOG2; i++)
+		{
+			if (readPing)
+			{
+				glBindImageTexture(0, waterPing, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+				glBindImageTexture(1, waterPong, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+			}
+			else
+			{
+				glBindImageTexture(0, waterPong, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+				glBindImageTexture(1, waterPing, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+			}
+			if (i == 0)
+				glBindImageTexture(0, waterhdzTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+			waterFFTShader.uniform("stage", i);
+			glDispatchCompute(numGroupsFFT, numGroupsFFT, 1);
+			glMemoryBarrier(GL_ALL_BARRIER_BITS);
+			readPing = !readPing;
+		}
+		// vertical pass
+		waterFFTShader.uniform("isHorizontalPass", 0);
+		for (int i = 0; i < WATER_FFT_LOG2; i++)
+		{
+			if (readPing)
+			{
+				glBindImageTexture(0, waterPing, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+				glBindImageTexture(1, waterPong, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+			}
+			else
+			{
+				glBindImageTexture(0, waterPong, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+				glBindImageTexture(1, waterPing, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+			}
+			if (i == WATER_FFT_LOG2 - 1)
+				glBindImageTexture(1, waterhdzTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+			waterFFTShader.uniform("stage", i);
+			glDispatchCompute(numGroupsFFT, numGroupsFFT, 1);
+			glMemoryBarrier(GL_ALL_BARRIER_BITS);
+			readPing = !readPing;
+		}
 	}
 
-	// vertical pass
-	waterFFTShader.uniform("isHorizontalPass", 0);
-	for (int i = 0; i < WATER_FFT_LOG2; i++)
-	{
-		if (readPing)
-		{
-			glBindImageTexture(0, waterPing, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
-			glBindImageTexture(1, waterPong, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
-		}
-		else
-		{
-			glBindImageTexture(0, waterPong, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
-			glBindImageTexture(1, waterPing, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
-		}
-		waterFFTShader.uniform("stage", i);
-
-		glDispatchCompute(numGroupsFFT, numGroupsFFT, 1);
-
-		glMemoryBarrier(GL_ALL_BARRIER_BITS);
-
-		readPing = !readPing;
-	}
-
-
-	glBindImageTexture(1, waterDispTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-	if(readPing)
-		glBindImageTexture(2, waterPing, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
-	else
-		glBindImageTexture(2, waterPong, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+	glBindImageTexture(0, waterDispTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+	glBindImageTexture(1, waterhTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+	glBindImageTexture(2, waterhdxTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+	glBindImageTexture(3, waterhdzTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
 	waterDispShader.use();
 	waterDispShader.uniform("waterScale", WATER_SCALE);
 	waterDispShader.uniform("fftSize", float(WATER_FFT_SIZE));

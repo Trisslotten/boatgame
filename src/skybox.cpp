@@ -117,7 +117,7 @@ void Skybox::update()
 	// https://nicoschertler.wordpress.com/2013/04/03/simulating-a-days-sky/
 	float pi = glm::pi<float>();
 	// 1: straight up, 0: on horizon
-	float sunpos = 0.2;
+	float sunpos = 0.5;
 	zenith = 0.5 * pi * (1.0 - sunpos);
 	azimuth = pi / 8;
 

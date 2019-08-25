@@ -2,8 +2,10 @@
 
 layout(local_size_x = 16, local_size_y = 16) in;
 
-layout(binding = 1, rg32f) readonly uniform image2D imgh0;
-layout(binding = 2, rg32f) writeonly uniform image2D imgh;
+layout(binding = 0, rg32f) readonly uniform image2D imgh0;
+layout(binding = 1, rg32f) writeonly uniform image2D imgh;
+layout(binding = 2, rg32f) writeonly uniform image2D imghdx;
+layout(binding = 3, rg32f) writeonly uniform image2D imghdz;
 
 uniform float time;
 uniform float fftSize;
@@ -48,15 +50,27 @@ void main()
 	int N = int(fftSize);
 	vec2 uv = 2*PI*(vec2(i) - 0.5*fftSize)/waterScale;
 	float k = length(uv);
+	if(k < 0.00001)
+		k = 0.00001;
 
 	vec2 h0 = imageLoad(imgh0, i).xy;
 	vec2 mh0 = imageLoad(imgh0, ivec2(N)-i).xy;
 
 	vec4 result = vec4(0);
 	result.xy += cmult(h0, cexp(w(k)*time));
+	result.xy += cmult(conj(mh0), cexp(w(k)*time));
+
+	
+	vec2 hdx = cmult(vec2(0, -uv.x/k), result.xy);
+
+	vec2 hdz = cmult(vec2(0, -uv.y/k), result.xy);
+
 	//result.xy += cmult(conj(mh0), cexp(-w(k)*time));
 
 	//result.xy = h0;
 
 	imageStore(imgh, i, result);
+
+	imageStore(imghdx, i, vec4(hdx, 0,0));
+	imageStore(imghdz, i, vec4(hdz, 0,0));
 }
