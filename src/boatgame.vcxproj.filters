@@ -20,6 +20,12 @@
     <Filter Include="Source Files\imgui">
       <UniqueIdentifier>{061fc6f6-c979-45a5-8bce-c51587685ede}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\graphics\shaders\water">
+      <UniqueIdentifier>{8a1bdf8f-06b0-4559-99f4-449068dfda3c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\graphics\shaders\voxels">
+      <UniqueIdentifier>{6c00e138-8a18-4851-bcd0-08d41044aa4d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -45,9 +51,6 @@
     </ClCompile>
     <ClCompile Include="renderer.cpp">
       <Filter>Source Files\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="water.cpp">
-      <Filter>Source Files\physics</Filter>
     </ClCompile>
     <ClCompile Include="imgui\imgui.cpp">
       <Filter>Source Files\imgui</Filter>
@@ -79,6 +82,9 @@
     <ClCompile Include="skybox.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="water.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="shader.hpp">
@@ -101,9 +107,6 @@
     </ClInclude>
     <ClInclude Include="camera.hpp">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="water.hpp">
-      <Filter>Source Files\physics</Filter>
     </ClInclude>
     <ClInclude Include="imgui\imconfig.h">
       <Filter>Source Files\imgui</Filter>
@@ -141,20 +144,11 @@
     <ClInclude Include="skybox.hpp">
       <Filter>Source Files\graphics</Filter>
     </ClInclude>
+    <ClInclude Include="water.hpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\water.frag">
-      <Filter>Source Files\graphics\shaders</Filter>
-    </None>
-    <None Include="shaders\water.tesc">
-      <Filter>Source Files\graphics\shaders</Filter>
-    </None>
-    <None Include="shaders\water.tese">
-      <Filter>Source Files\graphics\shaders</Filter>
-    </None>
-    <None Include="shaders\water.vert">
-      <Filter>Source Files\graphics\shaders</Filter>
-    </None>
     <None Include="shaders\point.vert">
       <Filter>Source Files\graphics\shaders</Filter>
     </None>
@@ -176,38 +170,50 @@
     <None Include="shaders\test.comp">
       <Filter>Source Files\graphics\shaders</Filter>
     </None>
-    <None Include="shaders\voxelize.vert">
-      <Filter>Source Files\graphics\shaders</Filter>
-    </None>
-    <None Include="shaders\voxelize.frag">
-      <Filter>Source Files\graphics\shaders</Filter>
-    </None>
-    <None Include="shaders\voxelize.geom">
-      <Filter>Source Files\graphics\shaders</Filter>
-    </None>
-    <None Include="shaders\voxel.vert">
-      <Filter>Source Files\graphics\shaders</Filter>
-    </None>
-    <None Include="shaders\voxel.geom">
-      <Filter>Source Files\graphics\shaders</Filter>
-    </None>
-    <None Include="shaders\voxel.frag">
-      <Filter>Source Files\graphics\shaders</Filter>
+    <None Include="shaders\waterprefft.comp">
+      <Filter>Source Files\graphics\shaders\water</Filter>
     </None>
     <None Include="shaders\water.comp">
-      <Filter>Source Files\graphics\shaders</Filter>
+      <Filter>Source Files\graphics\shaders\water</Filter>
     </None>
-    <None Include="shaders\waterh.comp">
-      <Filter>Source Files\graphics\shaders</Filter>
+    <None Include="shaders\water.frag">
+      <Filter>Source Files\graphics\shaders\water</Filter>
     </None>
-    <None Include="shaders\waterprefft.comp">
-      <Filter>Source Files\graphics\shaders</Filter>
+    <None Include="shaders\water.tesc">
+      <Filter>Source Files\graphics\shaders\water</Filter>
     </None>
-    <None Include="shaders\twiddle.comp">
-      <Filter>Source Files\graphics\shaders</Filter>
+    <None Include="shaders\water.tese">
+      <Filter>Source Files\graphics\shaders\water</Filter>
+    </None>
+    <None Include="shaders\water.vert">
+      <Filter>Source Files\graphics\shaders\water</Filter>
     </None>
     <None Include="shaders\waterfft.comp">
-      <Filter>Source Files\graphics\shaders</Filter>
+      <Filter>Source Files\graphics\shaders\water</Filter>
+    </None>
+    <None Include="shaders\waterh.comp">
+      <Filter>Source Files\graphics\shaders\water</Filter>
+    </None>
+    <None Include="shaders\voxelize.vert">
+      <Filter>Source Files\graphics\shaders\voxels</Filter>
+    </None>
+    <None Include="shaders\voxel.frag">
+      <Filter>Source Files\graphics\shaders\voxels</Filter>
+    </None>
+    <None Include="shaders\voxel.geom">
+      <Filter>Source Files\graphics\shaders\voxels</Filter>
+    </None>
+    <None Include="shaders\voxel.vert">
+      <Filter>Source Files\graphics\shaders\voxels</Filter>
+    </None>
+    <None Include="shaders\voxelize.frag">
+      <Filter>Source Files\graphics\shaders\voxels</Filter>
+    </None>
+    <None Include="shaders\voxelize.geom">
+      <Filter>Source Files\graphics\shaders\voxels</Filter>
+    </None>
+    <None Include="shaders\twiddle.comp">
+      <Filter>Source Files\graphics\shaders\water</Filter>
     </None>
   </ItemGroup>
 </Project>

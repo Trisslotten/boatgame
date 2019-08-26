@@ -48,11 +48,12 @@ void main()
 
 	float perm = 1.0-2.0*mod(i.x+i.y,2);
 
-	float choppiness = 1.5;
+	float choppiness = 0.1;
+	float heightScale = 0.1;
 
-	dispacement.y = -0.7*perm*imageLoad(butterflyResult, i).x / (fftSize*fftSize);
-	dispacement.x = choppiness*perm*imageLoad(butterflydxResult, i).x / (fftSize*fftSize);
-	dispacement.z = choppiness*perm*imageLoad(butterflydzResult, i).x / (fftSize*fftSize);
+	dispacement.y = heightScale*perm*imageLoad(butterflyResult, i).x / (fftSize*fftSize);
+	dispacement.x = -choppiness*perm*imageLoad(butterflydxResult, i).x / (fftSize*fftSize);
+	dispacement.z = -choppiness*perm*imageLoad(butterflydzResult, i).x / (fftSize*fftSize);
 	
 
 

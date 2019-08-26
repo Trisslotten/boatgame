@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include "model.hpp"
 #include "skybox.hpp"
+#include "water.hpp"
 
 class Renderer
 {
@@ -17,21 +18,7 @@ class Renderer
 	ShaderProgram waterShader;
 	glm::vec3 waterSize{5000,20,5000};
 
-
-	GLuint waterDispTex;
-	GLuint waterh0Tex;
-	GLuint waterhTex;
-	GLuint waterhdxTex;
-	GLuint waterhdzTex;
-	GLuint waterTwiddleTex;
-	GLuint waterPing;
-	GLuint waterPong;
-	bool readPing = true;
-	ShaderProgram waterTwiddleShader;
-	ShaderProgram waterPreFFTShader;
-	ShaderProgram waterhShader;
-	ShaderProgram waterFFTShader;
-	ShaderProgram waterDispShader;
+	Water water;
 
 	Skybox skybox;
 	

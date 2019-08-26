@@ -40,14 +40,14 @@ float Ph(vec2 kvec)
 		nk = vec2(0);
 	}
 	// wind speed
-	float V = 20;
+	float V = 50;
 	float L = V*V/GRAV;
 	// small waves cutoff. not used 
 	float l = 0.1;
 	// wind direction
 	vec2 w = normalize(vec2(1,1));
 	
-	float alignment = 2;
+	float alignment = 4;
 	return A*exp(-1/(k*k*L*L))*pow(abs(dot(nk,w)),alignment)/pow(k, 4);
 }
 

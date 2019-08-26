@@ -75,7 +75,7 @@ vec3 displace(vec3 pos)
 
 vec3 calcNormal()
 {
-	float t = waterScale/textureSize(dispTex, 0).x;
+	float t = 1.5*waterScale/textureSize(dispTex, 0).x;
 
 	// in x dir
 	vec3 px = teNonDisplaceWorld + vec3(t, 0, 0);
@@ -155,7 +155,6 @@ void main()
 	float d = 1.0;
 	
 	vec3 r = reflect(-lookW, normal);
-	// TODO figure out how to do skyColor in tangent space or something
 	vec3 worldR = r;//teTBN*r;
 	float a = atan(worldR.x, worldR.z);
 	float z = acos(worldR.y);
@@ -173,7 +172,7 @@ void main()
 	
 
 	float t = smoothstep(PI/2.0, 0.8*PI/2.0, rz);
-	skyColor = upwelling * t + skyColor * (1.0-t);
+	//skyColor = upwelling * t + skyColor * (1.0-t);
 
 
 	/*

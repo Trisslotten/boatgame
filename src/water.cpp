@@ -1,95 +1,203 @@
 #include "water.hpp"
 
-// iq's integer hash https://www.shadertoy.com/view/llGSzw
-float uhash11(glm::uint n)
+namespace
 {
-	n = (n << 13U) ^ n;
-	n = n * (n * n * 15731U + 789221U) + 1376312589U;
-	return float(n & 0x7fffffffU) / float(0x7fffffff);
-}
-float uhash12(glm::uvec2 x)
-{
-	glm::uvec2 q = 1103515245U * ((x >> 1U) ^ (glm::uvec2(x.y, x.x)));
-	glm::uint  n = 1103515245U * ((q.x) ^ (q.y >> 3U));
-	return float(n) * (1.0 / float(0xffffffffU));
-}
-float hash11(float x) { return uhash11(glm::uint(50.f*x)); }
-float hash12(glm::vec2 x) { return uhash12(glm::uvec2(50.f*x)); }
-float noise(glm::vec2 p)
-{
-	glm::vec2 ip = glm::floor(p);
-	glm::vec2 u = glm::fract(p);
-	u = u * u*(3.0f - 2.0f*u);
+	const int WATER_TEX_SIZE = 512;
+	const int WATER_TEX_LOG2 = glm::round(glm::log2(double(WATER_TEX_SIZE)));
+	const float WATER_SCALE = 500;
+	const int COMPUTE_LOCAL_SIZE = 16;
 
-	float res = glm::mix(
-		glm::mix(hash12(ip), hash12(ip + glm::vec2(1.0f, 0.0f)), u.x),
-		glm::mix(hash12(ip + glm::vec2(0.0f, 1.0f)), hash12(ip + glm::vec2(1.0f, 1.0f)), u.x), u.y);
-	return 2.f * res*res - 1.f;
-}
-glm::vec2 rotate(glm::vec2 v, float a)
-{
-	float s = sin(a);
-	float c = cos(a);
-	glm::mat2 m = glm::mat2(c, -s, s, c);
-	return m * v;
-}
-glm::vec3 gerstner(glm::vec2 pos, float S, float A, float L, float Q, glm::vec2 wd, float i, float time)
-{
-	glm::vec3 result = glm::vec3(0);
-	float w = sqrt(9.82 * 2 * 3.1415 / L);
-	float Qi = Q / (w*A);
-	float ph = S * 2 * 3.1415 / L;
-	float par = w * dot(wd, pos) + ph * time;
-	//par += 20.0*noise(pos*0.002 + 100*hash11(i));
-	result.x += Qi * A*wd.x*cos(par);
-	result.z += Qi * A*wd.y*cos(par);
-	result.y += A * sin(par);
 
-	float par2 = 0.3f*w*glm::dot(glm::mat2(0, 1, -1, 0)*wd, pos) + 10.f * hash11(i + 100);
-	result *= pow((sin(par2) + 1) / 2, 3);
-
-	return result;
+	const int numGroups = WATER_TEX_SIZE / COMPUTE_LOCAL_SIZE;
 }
 
-glm::vec3 displace(glm::vec3 pos, float time)
+void Water::init()
 {
-	glm::vec2 windDir = glm::normalize(glm::vec2(0, 1));
-	glm::vec3 result;
-	result.x = pos.x;
-	result.z = pos.z;
-	result.y = 0;
-	// wave spread 
-	float ws = 1.0;
-	for (int i = 0; i < 3; i++)
+	glGenTextures(1, &waterDispTex);
+	glBindTexture(GL_TEXTURE_2D, waterDispTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, WATER_TEX_SIZE, WATER_TEX_SIZE, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+
+	glGenTextures(1, &waterh0Tex);
+	glBindTexture(GL_TEXTURE_2D, waterh0Tex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, WATER_TEX_SIZE, WATER_TEX_SIZE, 0, GL_RG, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glGenTextures(1, &waterhTex);
+	glBindTexture(GL_TEXTURE_2D, waterhTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, WATER_TEX_SIZE, WATER_TEX_SIZE, 0, GL_RG, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glGenTextures(1, &waterhdxTex);
+	glBindTexture(GL_TEXTURE_2D, waterhdxTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, WATER_TEX_SIZE, WATER_TEX_SIZE, 0, GL_RG, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glGenTextures(1, &waterhdzTex);
+	glBindTexture(GL_TEXTURE_2D, waterhdzTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, WATER_TEX_SIZE, WATER_TEX_SIZE, 0, GL_RG, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glGenTextures(1, &waterPing);
+	glBindTexture(GL_TEXTURE_2D, waterPing);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, WATER_TEX_SIZE, WATER_TEX_SIZE, 0, GL_RG, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glGenTextures(1, &waterPong);
+	glBindTexture(GL_TEXTURE_2D, waterPong);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, WATER_TEX_SIZE, WATER_TEX_SIZE, 0, GL_RG, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glGenTextures(1, &waterTwiddleTex);
+	glBindTexture(GL_TEXTURE_2D, waterTwiddleTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, WATER_TEX_LOG2, WATER_TEX_SIZE, 0, GL_RG, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	waterTwiddleShader.add("twiddle.comp");
+	waterTwiddleShader.compile();
+
+	waterPreFFTShader.add("waterprefft.comp");
+	waterPreFFTShader.compile();
+
+	waterhShader.add("waterh.comp");
+	waterhShader.compile();
+
+	waterFFTShader.add("waterfft.comp");
+	waterFFTShader.compile();
+
+	waterDispShader.add("water.comp");
+	waterDispShader.compile();
+
+	int numGroupsFFT = WATER_TEX_SIZE / COMPUTE_LOCAL_SIZE;
+	glBindImageTexture(1, waterh0Tex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+	waterPreFFTShader.use();
+	waterPreFFTShader.uniform("waterScale", WATER_SCALE);
+	waterPreFFTShader.uniform("fftSize", float(WATER_TEX_SIZE));
+	glDispatchCompute(numGroupsFFT, numGroupsFFT, 1);
+
+
+	int numGroupsTwiddle = WATER_TEX_SIZE / COMPUTE_LOCAL_SIZE;
+	glBindImageTexture(3, waterTwiddleTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+	waterTwiddleShader.use();
+	waterPreFFTShader.uniform("fftSize", float(WATER_TEX_SIZE));
+	glDispatchCompute(WATER_TEX_LOG2, WATER_TEX_SIZE / 16.0, 1);
+}
+
+void Water::update(float globalTime)
+{
+	glBindImageTexture(0, waterh0Tex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+	glBindImageTexture(1, waterhTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+	glBindImageTexture(2, waterhdxTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+	glBindImageTexture(3, waterhdzTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+	waterhShader.use();
+	waterhShader.uniform("waterScale", WATER_SCALE);
+	waterhShader.uniform("fftSize", float(WATER_TEX_SIZE));
+	waterhShader.uniform("time", globalTime);
+	glDispatchCompute(numGroups, numGroups, 1);
+	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+
+
+	butterfly(waterhTex);
+	butterfly(waterhdxTex);
+	butterfly(waterhdzTex);
+
+
+	glBindImageTexture(0, waterDispTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+	glBindImageTexture(1, waterhTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+	glBindImageTexture(2, waterhdxTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+	glBindImageTexture(3, waterhdzTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+	waterDispShader.use();
+	waterDispShader.uniform("waterScale", WATER_SCALE);
+	waterDispShader.uniform("fftSize", float(WATER_TEX_SIZE));
+	waterDispShader.uniform("waterSize", float(WATER_TEX_SIZE));
+	glDispatchCompute(numGroups, numGroups, 1);
+
+	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+}
+
+void Water::bindDisplacementTex()
+{
+	glBindTexture(GL_TEXTURE_2D, waterDispTex);
+}
+
+void Water::butterfly(GLuint hTex)
+{
+	// horizontal pass
+	bool readPing = true;
+	glBindImageTexture(2, waterTwiddleTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+	waterFFTShader.use();
+	waterFFTShader.uniform("isHorizontalPass", 1);
+	for (int i = 0; i < WATER_TEX_LOG2; i++)
 	{
-		float amp = 0.8;
-		float a = 1.0 / (i + 1.0);
-		glm::vec2 waveDir = rotate(windDir, ws*(hash11(i) - 0.5));
-		result += gerstner(glm::vec2(pos.x, pos.z), 1000 * a, amp*a, 5000 * a, 0.1, waveDir, i, time);
-
-		waveDir = rotate(windDir, ws*(hash11(i + 10) - 0.5));
-		result += gerstner(glm::vec2(pos.x, pos.z), 900 * a, amp*a, 4500 * a, 0.1, waveDir, i + 10, time);
-
-		waveDir = rotate(windDir, ws*(hash11(i + 20) - 0.5));
-		result += gerstner(glm::vec2(pos.x, pos.z), 800 * a, amp*a, 4000 * a, 0.1, waveDir, i + 20, time);
-
-		waveDir = rotate(windDir, ws*(hash11(i + 30) - 0.5));
-		result += gerstner(glm::vec2(pos.x, pos.z), 700 * a, amp*a, 3500 * a, 0.1, waveDir, i + 30, time);
+		if (readPing)
+		{
+			glBindImageTexture(0, waterPing, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+			glBindImageTexture(1, waterPong, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+		}
+		else
+		{
+			glBindImageTexture(0, waterPong, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+			glBindImageTexture(1, waterPing, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+		}
+		if (i == 0)
+			glBindImageTexture(0, hTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+		waterFFTShader.uniform("stage", i);
+		glDispatchCompute(numGroups, numGroups, 1);
+		glMemoryBarrier(GL_ALL_BARRIER_BITS);
+		readPing = !readPing;
 	}
-	return result;
-}
-
-
-float Water::heightAt(const glm::vec3& pos, float time)
-{
-	return displace(pos, time).y;
-}
-
-glm::vec3 Water::velocityAt(const glm::vec3 & pos, float time)
-{
-	float timestep = 1.0f/60.0f;
-	glm::vec3 now = displace(pos, time);
-	glm::vec3 future = displace(pos, time + timestep);
-
-	return (future - now) / timestep;
+	// vertical pass
+	waterFFTShader.uniform("isHorizontalPass", 0);
+	for (int i = 0; i < WATER_TEX_LOG2; i++)
+	{
+		if (readPing)
+		{
+			glBindImageTexture(0, waterPing, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+			glBindImageTexture(1, waterPong, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+		}
+		else
+		{
+			glBindImageTexture(0, waterPong, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
+			glBindImageTexture(1, waterPing, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+		}
+		if (i == WATER_TEX_LOG2 - 1)
+			glBindImageTexture(1, hTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+		waterFFTShader.uniform("stage", i);
+		glDispatchCompute(numGroups, numGroups, 1);
+		glMemoryBarrier(GL_ALL_BARRIER_BITS);
+		readPing = !readPing;
+	}
 }

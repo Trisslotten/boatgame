@@ -1,14 +1,36 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include "shader.hpp"
 
 class Water
 {
-
-
-
 public:
-	static float heightAt(const glm::vec3& pos, float time);
+	void init();
+	void update(float globalTime);
 
-	static glm::vec3 velocityAt(const glm::vec3& pos, float time);
+	void bindDisplacementTex();
+
+private: 
+	void initTex(GLuint& texture, GLint format, int w, int h);
+
+	void butterfly(GLuint hTex); 
+
+	GLuint waterDispTex;
+	GLuint waterh0Tex;
+	GLuint waterhTex;
+	GLuint waterhdxTex;
+	GLuint waterhdzTex;
+	GLuint waterTwiddleTex;
+	GLuint waterPing;
+	GLuint waterPong;
+	ShaderProgram waterTwiddleShader;
+	ShaderProgram waterPreFFTShader;
+	ShaderProgram waterhShader;
+	ShaderProgram waterFFTShader;
+	ShaderProgram waterDispShader;
+
+
 };
