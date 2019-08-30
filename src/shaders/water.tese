@@ -50,8 +50,11 @@ vec3 displace(vec3 pos)
 	//result *= pow(smoothstep(7000, 0, look), 10);
 
 */
+	vec3 s;
+	s.xz = vec2(1.0);
+	s.y = 1.0;
 
-	result += texture(dispTex, pos.xz/waterScale).rgb;
+	result += s * texture(dispTex, pos.xz/waterScale).rgb;
 
 	return result;
 }

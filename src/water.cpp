@@ -4,7 +4,7 @@ namespace
 {
 	const int WATER_TEX_SIZE = 512;
 	const int WATER_TEX_LOG2 = glm::round(glm::log2(double(WATER_TEX_SIZE)));
-	const float WATER_SCALE = 500;
+	const float WATER_SCALE = 128;
 	const int COMPUTE_LOCAL_SIZE = 16;
 
 
@@ -112,7 +112,7 @@ void Water::init()
 	int numGroupsTwiddle = WATER_TEX_SIZE / COMPUTE_LOCAL_SIZE;
 	glBindImageTexture(3, waterTwiddleTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 	waterTwiddleShader.use();
-	waterPreFFTShader.uniform("fftSize", float(WATER_TEX_SIZE));
+	waterTwiddleShader.uniform("fftSize", float(WATER_TEX_SIZE));
 	glDispatchCompute(WATER_TEX_LOG2, WATER_TEX_SIZE / 16.0, 1);
 }
 
@@ -125,7 +125,7 @@ void Water::update(float globalTime)
 	waterhShader.use();
 	waterhShader.uniform("waterScale", WATER_SCALE);
 	waterhShader.uniform("fftSize", float(WATER_TEX_SIZE));
-	waterhShader.uniform("time", globalTime);
+	waterhShader.uniform("time", 2*globalTime);
 	glDispatchCompute(numGroups, numGroups, 1);
 	glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
@@ -151,6 +151,11 @@ void Water::update(float globalTime)
 void Water::bindDisplacementTex()
 {
 	glBindTexture(GL_TEXTURE_2D, waterDispTex);
+}
+
+float Water::getScale()
+{
+	return WATER_SCALE;
 }
 
 void Water::butterfly(GLuint hTex)

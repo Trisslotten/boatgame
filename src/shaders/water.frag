@@ -69,14 +69,19 @@ vec3 rgb(float Y, float x, float y)
 vec3 displace(vec3 pos)
 {
 	vec3 result = pos;
-	result += texture(dispTex, pos.xz/waterScale).rgb;
+
+	vec3 s;
+	s.xz = vec2(1.0);
+	s.y = 1.0;
+
+	result += s*texture(dispTex, pos.xz/waterScale).rgb;
 	return result;
 }
 
 vec3 calcNormal()
 {
+#if 1
 	float t = 1.5*waterScale/textureSize(dispTex, 0).x;
-
 	// in x dir
 	vec3 px = teNonDisplaceWorld + vec3(t, 0, 0);
 	// in z dir
@@ -85,8 +90,12 @@ vec3 calcNormal()
 	px = displace(px);
 	pz = displace(pz);
 	mat3 result;
-	vec3 v1 = normalize(pz-p);
-	vec3 v2 = normalize(px-p);
+	vec3 v1 = pz-p;
+	vec3 v2 = px-p;
+#else
+	vec3 v1 = dFdx(teWPosition);
+	vec3 v2 = dFdy(teWPosition);
+#endif
 	return normalize(cross(v1, v2));
 }
 
@@ -195,6 +204,13 @@ void main()
 
 	outColor = vec4(lighting,1);
 
+	/*
+	vec2 asd = teNonDisplaceWorld.xz/waterScale;
+	outColor = mix(outColor, vec4(0,1,0, 1), step(0.9, fract(teWPosition.x)));
+	outColor = mix(outColor, vec4(0,1,0, 1), step(0.9, fract(teWPosition.z)));
+	outColor = mix(outColor, vec4(1,0,1, 1), step(0.99, fract(asd.x)));
+	outColor = mix(outColor, vec4(1,0,1, 1), step(0.99, fract(asd.y)));
+	*/
 	//outColor = vec4(normal,1);
 
 	//outColor = vec4(vec3(5*waterSizeScale*texture(dispTex, teNonDisplaceWorld.xz/waterSizeScale).g), 1);

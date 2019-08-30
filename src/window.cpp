@@ -118,7 +118,8 @@ void Window::open(int width, int height)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
 
 	// MSAA
-	glfwWindowHint(GLFW_SAMPLES, 8);
+	glfwWindowHint(GLFW_SAMPLES, 1);
+	glEnable(GL_MULTISAMPLE);
 
 	window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
 	if (!window)
@@ -134,6 +135,7 @@ void Window::open(int width, int height)
 		std::cin.ignore();
 		exit(1);
 	}
+
 
 	scrolls[window] = glm::vec2(0, 0);
 	glfwSetScrollCallback(window, scrollCallback);

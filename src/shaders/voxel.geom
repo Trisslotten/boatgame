@@ -44,7 +44,7 @@ void main()
 	if(v > 0)
 	{
 		vec3 voxelSize = 1.0 / vec3(size);
-		vec3 voxelPos = (vec3(i)*2.0-1.0) / vec3(size) + vec3(0,2,0);
+		vec3 voxelPos = (vec3(i)*1.0-0.5) / vec3(size) + vec3(0,0,0);
 		for(int j = 0; j < 14; j++)
 		{
 			vec3 vertPos;

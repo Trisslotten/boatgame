@@ -7,13 +7,6 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/matrix_transform_2d.hpp>
 
-
-namespace
-{
-	const float WATER_SCALE = 100.f;
-}
-
-
 void Renderer::init()
 {
 	glm::vec2 *patchVertices = new glm::vec2[MAX_PATCHES * MAX_PATCHES];
@@ -137,7 +130,7 @@ void Renderer::render()
 	waterShader.uniform("fov", camera.fov);
 	waterShader.uniform("cameraDir", camera.getLookDir());
 	waterShader.uniform("sunDir", skybox.getSunDir());
-	waterShader.uniform("waterScale", WATER_SCALE);
+	waterShader.uniform("waterScale", water.getScale());
 	skybox.setUniforms(waterShader);
 	glBindVertexArray(waterPatchVAO);
 	glPatchParameteri(GL_PATCH_VERTICES, 1);

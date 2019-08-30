@@ -13,6 +13,8 @@ public:
 
 	void bindDisplacementTex();
 
+	float getScale();
+
 private: 
 	void initTex(GLuint& texture, GLint format, int w, int h);
 

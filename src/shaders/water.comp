@@ -7,9 +7,6 @@ layout(binding = 1, rg32f) readonly uniform image2D butterflyResult;
 layout(binding = 2, rg32f) readonly uniform image2D butterflydxResult;
 layout(binding = 3, rg32f) readonly uniform image2D butterflydzResult;
 
-
-
-
 uniform float fftSize;
 uniform float waterSize;
 uniform float waterScale;
@@ -20,7 +17,6 @@ const float PI = 3.14159265359;
 const float INV_SQRT2 = 1./sqrt(2.);
 const float GRAV = 9.82;
 const float DEPTH = 10;
-
 
 
 // e^(i*x)
@@ -48,14 +44,12 @@ void main()
 
 	float perm = 1.0-2.0*mod(i.x+i.y,2);
 
-	float choppiness = 0.1;
-	float heightScale = 0.1;
+	float heightScale = 2.0;
+	float choppiness = 8.0;
 
 	dispacement.y = heightScale*perm*imageLoad(butterflyResult, i).x / (fftSize*fftSize);
 	dispacement.x = -choppiness*perm*imageLoad(butterflydxResult, i).x / (fftSize*fftSize);
 	dispacement.z = -choppiness*perm*imageLoad(butterflydzResult, i).x / (fftSize*fftSize);
-	
-
 
 	imageStore(dispImg, i, dispacement);
 }
