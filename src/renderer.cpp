@@ -57,7 +57,8 @@ void Renderer::init()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, &image[0]);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
-	
+
+
 	water.init();
 
 	modelShader.add("model.vert");
@@ -71,6 +72,19 @@ void Renderer::init()
 
 	skybox.init();
 	skybox.update();
+
+	////////////////////////////////////
+
+	/*
+	buoyancyShader.add("buoyancy.comp");
+	buoyancyShader.compile();
+
+	glGenBuffers(1, &boatSSBO);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, boatSSBO);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * 4096, &boatPos, GL_DYNAMIC_DRAW);
+	*/
+
+	boatModel = this->getModel("assets/hull.obj");
 }
 
 void Renderer::render()
@@ -79,7 +93,56 @@ void Renderer::render()
 	{
 		waterShader.reload();
 	}
+	water.update(globalTime);
+
+
+	float dt = deltaTimer.restart();
+	water.bindDisplacementTex();
+	std::vector<glm::vec4> dispTex(water.getTexSize()*water.getTexSize());
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, dispTex.data());
+
+	int vr = Model::VOXEL_RES;
+	for (int z = 0; z < vr; z++)
+	{
+		for (int y = 0; y < vr; y++)
+		{
+			for (int x = 0; x < vr; x++)
+			{
+				int index = x + y * vr + z * vr * vr;
+				if (boatModel->img[index] == 0)
+					continue;
+
+				glm::vec3 pos = boatPos + glm::vec3(x, y, z) / float(vr) - 0.5f;
+
+				float ws = water.getScale();
+				int ix = water.getTexSize()*glm::fract(pos.x / ws);
+				int iy = water.getTexSize()*glm::fract(pos.x / ws);
+				int dispIndex = ix + iy * water.getTexSize();
+
+				glm::vec4 disp = dispTex[dispIndex];
+				if (pos.y < disp.y)
+				{
+					float volume = 1.f / (vr*vr*vr);
+					float displaced = 1000 * volume;
+					boatForces.y += 9.82 * displaced;
+					float v = length(boatVel);
+					if (v > 0.0001f)
+						boatForces -= 0.5f * 1000.f * normalize(boatVel) * v*v / float(vr*vr);
+				}
+			}
+		}
+	}
+	float mass = 50;
+	boatForces.y -= 9.82*mass;
 	
+	boatVel += boatForces * dt / mass;
+	boatPos += boatVel * dt;
+
+	boatForces = glm::vec3(0);
+
+	this->submit(boatModel);
+
+
 
 	cameraTransform = camera.getTransform();
 	
@@ -95,23 +158,23 @@ void Renderer::render()
 	modelShader.uniform("viewProj", cameraTransform);
 	//modelShader.uniform("sunDir", sunDir);
 	modelShader.uniform("time", globalTime);
+	modelShader.uniform("position", boatPos);
 	for(auto m : drawList)
 	{
-		//m->render(modelShader);
+		m->render(modelShader);
 	}
 	
 	voxelShader.use();
 	voxelShader.uniform("viewProj", cameraTransform);
 	voxelShader.uniform("fov", camera.fov);
+	voxelShader.uniform("position", boatPos);
 	for (auto m : drawList)
 	{
 		glCullFace(GL_FRONT);
-		m->renderVoxels(modelShader);
+		//m->renderVoxels(modelShader);
 		glCullFace(GL_BACK);
 	}
 	drawList.clear();
-
-	water.update(globalTime);
 
 	// render water
 	glActiveTexture(GL_TEXTURE0);

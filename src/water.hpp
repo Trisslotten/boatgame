@@ -12,15 +12,15 @@ public:
 	void update(float globalTime);
 
 	void bindDisplacementTex();
-
 	float getScale();
 
-private: 
-	void initTex(GLuint& texture, GLint format, int w, int h);
+	int getTexSize();
 
+private: 
 	void butterfly(GLuint hTex); 
 
-	GLuint waterDispTex;
+	int dispIndex = 0;
+	GLuint waterDispTexs[2];
 	GLuint waterh0Tex;
 	GLuint waterhTex;
 	GLuint waterhdxTex;
@@ -33,6 +33,4 @@ private:
 	ShaderProgram waterhShader;
 	ShaderProgram waterFFTShader;
 	ShaderProgram waterDispShader;
-
-
 };

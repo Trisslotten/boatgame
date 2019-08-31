@@ -109,7 +109,7 @@ void main()
 #endif
 	vec4 result = vec4(0);
 	result.xy += cmult(h0, cexp(w(k)*time));
-	result.xy += 0.1*cmult(conj(mh0), cexp(-w(k)*time));
+	result.xy += 0.3*cmult(conj(mh0), cexp(-w(k)*time));
 
 
 	// hack to get water moving in one direction

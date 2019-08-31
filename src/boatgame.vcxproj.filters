@@ -215,5 +215,8 @@
     <None Include="shaders\twiddle.comp">
       <Filter>Source Files\graphics\shaders\water</Filter>
     </None>
+    <None Include="shaders\buoyancy.comp">
+      <Filter>Source Files\graphics\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -9,13 +9,14 @@ out vec3 vnormal;
 
 uniform float time;
 uniform mat4 viewProj;
+uniform vec3 position;
 
 void main()
 {
-	float s = sin(time);
-	float c = cos(time);
-	mat3 rot = mat3(vec3(s, c, 0), vec3(-c, s, 0), vec3(0, 0, 1));
+	//float s = sin(time);
+	//float c = cos(time);
+	//mat3 rot = mat3(vec3(s, c, 0), vec3(-c, s, 0), vec3(0, 0, 1));
 
-	vnormal = normalize(rot*normal);
-	gl_Position = viewProj * vec4(rot*pos, 1.0);
+	vnormal = normalize(normal);
+	gl_Position = viewProj * vec4(pos + position, 1.0);
 }

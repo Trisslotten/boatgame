@@ -167,6 +167,7 @@
     <ClInclude Include="window.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\buoyancy.comp" />
     <None Include="shaders\model.frag" />
     <None Include="shaders\model.vert" />
     <None Include="shaders\point.frag" />

@@ -13,14 +13,17 @@ namespace
 
 void Water::init()
 {
-	glGenTextures(1, &waterDispTex);
-	glBindTexture(GL_TEXTURE_2D, waterDispTex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, WATER_TEX_SIZE, WATER_TEX_SIZE, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	glGenTextures(2, waterDispTexs);
+	for (int i = 0; i < 2; i++)
+	{
+		glBindTexture(GL_TEXTURE_2D, waterDispTexs[i]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, WATER_TEX_SIZE, WATER_TEX_SIZE, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
 
 
 	glGenTextures(1, &waterh0Tex);
@@ -127,7 +130,7 @@ void Water::update(float globalTime)
 	waterhShader.uniform("fftSize", float(WATER_TEX_SIZE));
 	waterhShader.uniform("time", 2*globalTime);
 	glDispatchCompute(numGroups, numGroups, 1);
-	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 
 	butterfly(waterhTex);
@@ -135,7 +138,7 @@ void Water::update(float globalTime)
 	butterfly(waterhdzTex);
 
 
-	glBindImageTexture(0, waterDispTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+	glBindImageTexture(0, waterDispTexs[dispIndex], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 	glBindImageTexture(1, waterhTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
 	glBindImageTexture(2, waterhdxTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
 	glBindImageTexture(3, waterhdzTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
@@ -145,17 +148,25 @@ void Water::update(float globalTime)
 	waterDispShader.uniform("waterSize", float(WATER_TEX_SIZE));
 	glDispatchCompute(numGroups, numGroups, 1);
 
-	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+	// shift between 0 and 1
+	dispIndex = 1 - dispIndex;
 }
 
 void Water::bindDisplacementTex()
 {
-	glBindTexture(GL_TEXTURE_2D, waterDispTex);
+	glBindTexture(GL_TEXTURE_2D, waterDispTexs[dispIndex]);
 }
 
 float Water::getScale()
 {
 	return WATER_SCALE;
+}
+
+int Water::getTexSize()
+{
+	return WATER_TEX_SIZE;
 }
 
 void Water::butterfly(GLuint hTex)
@@ -181,7 +192,7 @@ void Water::butterfly(GLuint hTex)
 			glBindImageTexture(0, hTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG32F);
 		waterFFTShader.uniform("stage", i);
 		glDispatchCompute(numGroups, numGroups, 1);
-		glMemoryBarrier(GL_ALL_BARRIER_BITS);
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 		readPing = !readPing;
 	}
 	// vertical pass
@@ -206,3 +217,4 @@ void Water::butterfly(GLuint hTex)
 		readPing = !readPing;
 	}
 }
+

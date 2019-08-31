@@ -282,7 +282,7 @@ void Model::voxelize()
 		voxelizeShader.compile();
 	}
 
-	std::vector<uint8_t> img;
+	
 	img.resize(VOXEL_RES*VOXEL_RES*VOXEL_RES);
 	std::fill(img.begin(), img.end(), 0);
 	glGenTextures(1, &voxelTex);

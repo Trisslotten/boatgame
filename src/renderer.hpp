@@ -34,8 +34,6 @@ private:
 	ShaderProgram waterShader;
 	glm::vec3 waterSize{5000,20,5000};
 
-	
-
 	Water water;
 
 	Skybox skybox;
@@ -51,4 +49,9 @@ private:
 	Camera camera;
 	glm::mat4 cameraTransform;
 
+	Model* boatModel;
+	glm::vec3 boatPos;
+	glm::vec3 boatVel;
+	glm::vec3 boatForces;
+	Timer deltaTimer;
 };

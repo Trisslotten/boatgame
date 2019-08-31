@@ -47,6 +47,16 @@ struct Vertex
 
 class Model
 {
+public:
+	const static int VOXEL_RES = 16;
+	//std::vector<Material> materials;
+	bool load(const std::string& file);
+
+	void render(ShaderProgram& shader);
+
+	void renderVoxels(ShaderProgram& shader);
+
+private:
 	class Mesh
 	{
 
@@ -98,8 +108,8 @@ class Model
 	void calcBounds();
 	void voxelize();
 	GLuint voxelTex;
-	const int VOXEL_RES = 16;
 	GLuint voxelVao;
+	std::vector<uint8_t> img;
 
 
 	Texture texture;
@@ -110,12 +120,6 @@ class Model
 
 	glm::vec3 minBounds;
 	glm::vec3 maxBounds;
-public:
-	//std::vector<Material> materials;
-	bool load(const std::string& file);
 
-	void render(ShaderProgram& shader);
-
-	void renderVoxels(ShaderProgram& shader);
-
+	friend class Renderer;
 };
