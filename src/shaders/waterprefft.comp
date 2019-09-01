@@ -58,7 +58,7 @@ float Ph(vec2 kvec)
 		nk = vec2(0);
 	}
 	// wind speed
-	float V = 15;
+	float V = 20;
 	float L = V*V/GRAV;
 	// small waves cutoff
 	float l = 0.0;

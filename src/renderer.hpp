@@ -49,9 +49,16 @@ private:
 	Camera camera;
 	glm::mat4 cameraTransform;
 
+
 	Model* boatModel;
-	glm::vec3 boatPos;
+	glm::vec3 boatPos{ 0,1,0 };
 	glm::vec3 boatVel;
-	glm::vec3 boatForces;
+	glm::vec3 forces;
+	glm::vec3 torques;
+	glm::vec3 momentum;
+	glm::quat orientation;
+	glm::vec3 angularMomentum;
+	float mass = 40;
+
 	Timer deltaTimer;
 };

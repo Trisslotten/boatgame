@@ -4,7 +4,7 @@ namespace
 {
 	const int WATER_TEX_SIZE = 512;
 	const int WATER_TEX_LOG2 = glm::round(glm::log2(double(WATER_TEX_SIZE)));
-	const float WATER_SCALE = 128;
+	const float WATER_SCALE = 64;
 	const int COMPUTE_LOCAL_SIZE = 16;
 
 

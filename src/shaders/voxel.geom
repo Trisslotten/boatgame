@@ -10,6 +10,7 @@ out vec3 g_pos;
 uniform isampler3D voxels;
 uniform mat4 viewProj;
 uniform vec3 position;
+uniform mat3 rotation;
 
 // https://stackoverflow.com/questions/28375338/cube-using-single-gl-triangle-strip
 const float cube_strip[] = {
@@ -45,14 +46,15 @@ void main()
 	if(v > 0)
 	{
 		vec3 voxelSize = 1.0 / vec3(size);
-		vec3 voxelPos = vec3(i) / vec3(size) - 0.5 + position;
+		vec3 offset = rotation*(vec3(i) / vec3(size) - 0.5);
+		vec3 voxelPos = offset + position;
 		for(int j = 0; j < 14; j++)
 		{
 			vec3 vertPos;
 			vertPos.x = cube_strip[3*j];
 			vertPos.y = cube_strip[3*j+1];
 			vertPos.z = cube_strip[3*j+2];
-			vec3 pos = voxelPos + voxelSize * vertPos;
+			vec3 pos = voxelPos + rotation * (voxelSize * vertPos);
 			gl_Position = viewProj * vec4(pos, 1.0);
 			g_pos = pos;
 			EmitVertex();

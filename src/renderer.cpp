@@ -84,7 +84,7 @@ void Renderer::init()
 	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * 4096, &boatPos, GL_DYNAMIC_DRAW);
 	*/
 
-	boatModel = this->getModel("assets/hull.obj");
+	boatModel = this->getModel("assets/hull2.obj");
 }
 
 void Renderer::render()
@@ -112,33 +112,111 @@ void Renderer::render()
 				if (boatModel->img[index] == 0)
 					continue;
 
-				glm::vec3 pos = boatPos + glm::vec3(x, y, z) / float(vr) - 0.5f;
+				glm::mat3 rotation = glm::mat3_cast(orientation);
 
+				glm::vec3 offset = rotation * (glm::vec3(x, y, z) / float(vr) - 0.5f);
+				glm::vec3 pos = boatPos + offset;
+
+				int ts = water.getTexSize();
 				float ws = water.getScale();
-				int ix = water.getTexSize()*glm::fract(pos.x / ws);
-				int iy = water.getTexSize()*glm::fract(pos.x / ws);
+				int ix = int(ts*glm::fract(pos.x / ws)) % ts;
+				int iy = int(ts*glm::fract(pos.z / ws)) % ts;
 				int dispIndex = ix + iy * water.getTexSize();
+
+				
 
 				glm::vec4 disp = dispTex[dispIndex];
 				if (pos.y < disp.y)
 				{
+
 					float volume = 1.f / (vr*vr*vr);
-					float displaced = 1000 * volume;
-					boatForces.y += 9.82 * displaced;
-					float v = length(boatVel);
-					if (v > 0.0001f)
-						boatForces -= 0.5f * 1000.f * normalize(boatVel) * v*v / float(vr*vr);
+					float displaced = 1000.f * volume;
+
+					glm::vec3 force(0, 9.82f * displaced, 0);
+
+					torques -= glm::cross(force, offset);
+					forces += force;
+
+					glm::vec3 velAt = momentum / mass + glm::cross(angularMomentum, offset);
+					
+					/*
+					std::cout << velAt.x << " ";
+					std::cout << velAt.y << " ";
+					std::cout << velAt.z << " ";
+					std::cout << "\n";
+					*/
+
+					float v = length(velAt);
+					if (v > 0.001f)
+					{
+						glm::vec3 drag = -normalize(velAt) * (0.5f * v * v * (1000.f/float(vr*vr)) );
+						torques -= glm::cross(drag, pos - boatPos);
+						forces += drag;
+					}
 				}
 			}
 		}
 	}
-	float mass = 50;
-	boatForces.y -= 9.82*mass;
+	if (Window::keyDown(GLFW_KEY_UP))
+	{
+		glm::vec3 force = orientation * glm::vec3(700, 0, 0);
+		glm::vec3 offset = orientation * glm::vec3(-0.5, -0.1, 0);
+		forces += force;
+		torques -= glm::cross(force, offset);
+	}
+	if (Window::keyDown(GLFW_KEY_RIGHT))
+	{
+		glm::vec3 force = orientation * glm::vec3(0, 0, -100);
+		glm::vec3 offset = orientation * glm::vec3(-0.5, -0.1, 0);
+		forces += force;
+		torques -= glm::cross(force, offset);
+	}
+	if (Window::keyDown(GLFW_KEY_LEFT))
+	{
+		glm::vec3 force = orientation * glm::vec3(0, 0, 100);
+		glm::vec3 offset = orientation * glm::vec3(-0.5, -0.1, 0);
+		forces += force;
+		torques -= glm::cross(force, offset);
+	}
 	
-	boatVel += boatForces * dt / mass;
-	boatPos += boatVel * dt;
+	forces.y -= 9.82f*mass;
+	
+	momentum += forces * dt;
+	angularMomentum += torques * dt;
 
-	boatForces = glm::vec3(0);
+	boatVel = momentum / mass;
+	glm::mat3 rotation = glm::mat3_cast(orientation);
+	glm::vec3 angularVelocity = angularMomentum;
+
+	glm::quat angularVelocityQ(
+		0,
+		angularVelocity
+	);
+
+	glm::quat spin = 0.5f*angularVelocityQ * orientation;
+
+	boatPos += boatVel * dt;
+	orientation += spin * dt;
+	orientation = glm::normalize(orientation);
+
+	/*
+	std::cout << boatPos.x << " ";
+	std::cout << boatPos.y << " ";
+	std::cout << boatPos.z << " ";
+	std::cout << "\n";
+
+	std::cout << forces.x << " ";
+	std::cout << forces.y << " ";
+	std::cout << forces.z << " ";
+	std::cout << "\n";
+	std::cout << "///////////////////////////////////\n";
+	*/
+
+	forces = glm::vec3(0);
+	torques = glm::vec3(0);
+
+
+
 
 	this->submit(boatModel);
 
@@ -161,17 +239,18 @@ void Renderer::render()
 	modelShader.uniform("position", boatPos);
 	for(auto m : drawList)
 	{
-		m->render(modelShader);
+		//m->render(modelShader);
 	}
 	
 	voxelShader.use();
 	voxelShader.uniform("viewProj", cameraTransform);
 	voxelShader.uniform("fov", camera.fov);
 	voxelShader.uniform("position", boatPos);
+	voxelShader.uniform("rotation", glm::mat3_cast(orientation));
 	for (auto m : drawList)
 	{
 		glCullFace(GL_FRONT);
-		//m->renderVoxels(modelShader);
+		m->renderVoxels(modelShader);
 		glCullFace(GL_BACK);
 	}
 	drawList.clear();
