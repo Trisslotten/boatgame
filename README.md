@@ -11,4 +11,6 @@ A sailing simulator using fft-water, and voxels for buoyancy.
  - [ ] Boat building similar to Kerbal Space Program
  - [ ] Multiplayer? :^)
  
- 
+## Screenshots
+![Screenshot](water2.png)
+![Screenshot](water4.png)
