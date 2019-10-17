@@ -1,5 +1,5 @@
 # Boatgame
-A sailing simulator using fft-water, and voxels for buoyancy.
+A sailing simulator using fft-water and voxels for buoyancy.
 
 ## Goals
  - [x] Atmospheric Scattering
